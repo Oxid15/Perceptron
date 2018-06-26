@@ -1,0 +1,10 @@
+
+*.json
+
+*.sqlite
+
+\.vs/
+
+\Debug/
+
+*.filters
