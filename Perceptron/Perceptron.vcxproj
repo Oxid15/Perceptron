@@ -118,6 +118,15 @@
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="simpleTest.csv" />
+    <None Include="test.csv" />
+    <None Include="train.csv" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="currentConfig.txt" />
+    <Text Include="mainConfig.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
