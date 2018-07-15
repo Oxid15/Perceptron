@@ -8,44 +8,36 @@ T randomWeight(int seed)
 {
 	T weight;
 	srand(seed);
-	for (int i = 0; i < 16; i++)
-	{
-		weight = 0.0001*(rand() % 5000 + 3000);
-	}
+	weight = 0.0001*(rand() % 5000 + 3000);
+	if (seed % 2)
+		weight = weight - 2 * weight;
 	return weight;
-}
-
-template<typename T>
-T getValue()
-{
-	std::cout << "\ntype the value\n";
-	T value;
-	std::cin >> value;
-	return value;
-}
-
-template<typename T>
-T* getArray(int size)
-{
-	std::cout << "\ntype the array through the gaps\n";
-	T* arr = new T[size];
-	for (int i = 0; i < size; i++)
-	{
-		std::cin >> arr[i];
-	}
-	return arr;
 }
 
 template<typename T>
 T sig(T num) { return 1 / (1 + exp(-num)); }
 
 template<typename T>
-T sum(T* in_x, int n)
+T sigDerivative(T num) { return sig<T>((num)*(1 - sig<T>(num))); }
+
+template<typename T>
+T sum(T* in, int n)
 {
 	T sum = 0;
 	for (int i = 0; i < n; i++)
 	{
-		sum += in_x[i];
+		sum += in[i];
+	}
+	return sum;
+}
+
+template<typename T>
+T weighedSum(T* in,T* weights, int n)
+{
+	T sum = 0;
+	for (int i = 0; i < n; i++)
+	{
+		sum += in[i] * weights[i];
 	}
 	return sum;
 }
@@ -53,8 +45,9 @@ T sum(T* in_x, int n)
 template<typename T>
 class BaseNeuron
 {
-	T* in_x;
-	T* out_x;
+	T bias;
+	T* in;
+	T out;
 	int prevNum;
 	int nextNum;
 public:
@@ -63,50 +56,42 @@ public:
 	{
 		prevNum = 1;
 		nextNum = 1;
-		in_x = new T;
-		out_x = new T;
+		in = new T;
 	}
 
-	BaseNeuron(int _prevNum, int _nextNum)
+	BaseNeuron(int _prevNum,int _nextNum, T _bias)
 	{
+		bias = _bias;
 		prevNum = _prevNum;
 		nextNum = _nextNum;
-
-		if (_prevNum == 1)
-		{
-			in_x = new T;
-			out_x = new T[_nextNum];
-		}
-		else
-		{
-			if (_nextNum == 1)
-			{
-				in_x = new T[_prevNum];
-				out_x = new T;
-			}
-			else
-			{
-				in_x = new T[_prevNum];
-				out_x = new T[_nextNum];
-			}
-		}
+		in = new T[_prevNum];
 	}
 						
-	T* process(T* in_x, T* weights)
+	T process(T* _in, T* weights)
 	{
-		T _sum = sum<T>(in_x, prevNum);
-		for (int i = 0; i < nextNum; i++)
-		{
-			out_x[i] = sig(_sum * weights[i]);
-		}
-		return out_x;
+		in = _in;
+		out = sig(weighedSum(in, weights, prevNum) + bias);
+		return out;
 	}
 
-	T getOutput(int index){return out_x[index];}
+	T process(T in)
+	{
+		out = sig(in + bias);
+		return out;
+	}
 
-	int getNextNum(){return nextNum;}
+	void setBias(T error,T speed)
+	{
+		bias = speed * error;
+	}
 
-	int getPrevNum(){return prevNum;}
+	T getBias() { return bias; }
+
+	T getOutput() { return out; }
+
+	int getNextNum() { return nextNum; }
+
+	int getPrevNum() { return prevNum; }
 };
 									
 template<typename T>
@@ -128,6 +113,11 @@ public:
 	void setRight(BaseNeuron<T>* _neuron) { right = _neuron; }
 
 	void setWeight(T _weight) {weight = _weight;}
+
+	void addToWeight(T addend)
+	{
+		weight += addend;
+	}
 
 	T getWeight() {return weight;}
 
@@ -165,27 +155,30 @@ public:
 		}
 	}
 
-	AdjMatrix(int _length, int _height, T* weights)
+	void setWeights(T* layerError, T* layerInput, T speed)
 	{
-		length = _length;
-		height = _height;
-		arr = new MatrixNeuron<T>*[length];
+		T** dWeights = new T*[length];
 		for (int i = 0; i < length; i++)
 		{
-			arr[i] = new MatrixNeuron<T>[height];
+			dWeights[i] = new T[height];
 		}
 
-		int k = 0;
 		for (int i = 0; i < height; i++)
 		{
 			for (int j = 0; j < length; j++)
 			{
-				arr[j][i].setLeft(new BaseNeuron<T>);
-				arr[j][i].setRight(new BaseNeuron<T>);
-				arr[j][i].setWeight(weights[k]);
-				k++;
+				dWeights[j][i] = -(speed * layerInput[i] * layerError[j]);
+			}				 
+		}
+
+		for (int i = 0; i < height; i++)
+		{
+			for (int j = 0; j < length; j++)
+			{
+				arr[j][i].addToWeight(dWeights[j][i]);
 			}
 		}
+
 	}
 
 	T* getStrWeights(int index)
@@ -214,122 +207,84 @@ public:
 		return neuron.getWeight();
 	}
 
-	//T** getAllWeights()
-	//{
-	//	T** temp = new T*[height];
-	//	for (int i = 0; i < height; i++)
-	//	{
-	//		for (int j = 0; j < length; j++)
-	//		{
-	//			temp[j][i] = arr[j][i].getWeight();
-	//		}
-	//	}
-	//	return temp;
-	//}
-
 	int getLength() { return length; }
 	int getHeight() { return height; }
-
-	//void printWeights()
-	//{
-	//	for (int i = 0; i < height; i++)
-	//	{
-	//		for (int j = 0; j < length; j++)
-	//		{
-	//			std::cout << arr[j][i].getWeight();
-	//			std::cout << ",";
-	//		}
-	//		std::cout << "\n";
-	//	}
-	//}
 };
 
 template<typename T>
 class Layer
 {
 	BaseNeuron<T>** arr;
+	T* input;
 	T* output;
+	T* error;
 	int neurons;
 	int lenInput;
 	int lenOutput;
 public:
-	Layer(int quantityPrev, int _quantityOfNeurons, int quantityNext)
+	Layer(int quantityPrev, int _quantityOfNeurons, int quantityNext, T* biases)
 	{
 		neurons = _quantityOfNeurons;
 		arr = new BaseNeuron<T>*[neurons];
 		for (int i = 0; i < neurons; i++)
 		{
-			arr[i] = new BaseNeuron<T>(quantityPrev, quantityNext);
+			arr[i] = new BaseNeuron<T>(quantityPrev, quantityNext, biases[i]);
 		}
 
-		lenInput = 0;
-		int* prevNum = new int[neurons];
-		for (int i = 0; i < neurons; i++)
-		{
-			prevNum[i] = arr[i]->getPrevNum();
-			lenInput += prevNum[i];
-		}
+		lenInput = quantityPrev;
+		lenOutput = quantityNext;
 
-		lenOutput = 0;
-		int* nextNum = new int[neurons];
-		for (int i = 0; i < neurons; i++)
-		{
-			nextNum[i] = arr[i]->getNextNum();
-			lenOutput += nextNum[i];
-		}
-
+		input  = new T[lenInput];
 		output = new T[lenOutput];
+		error  = new T[neurons];
 	}
 
-	T* process(T* input, AdjMatrix<T>* matrix)
+	T* process(T* _input)
 	{
-		T** neuronInput = new T*[neurons];
+		input = _input;
 		for (int i = 0; i < neurons; i++)
 		{
-			int prev = arr[i]->getPrevNum();
-			neuronInput[i] = new T[prev];
+			output[i] = arr[i]->process(_input[i]);
 		}
-
-		int k = 0;
-		for (int i = 0; i < neurons; i++)
-		{
-			int prev = arr[i]->getPrevNum();
-			for (int j = 0; j < prev; j++, k++)
-			{
-				*neuronInput[j] = input[k];
-			}
-			arr[i]->process(neuronInput[i], matrix->getStrWeights(i));
-		}
-			
-		//int k = 0;
-		//for (int i = 0; i < neurons; i++)
-		//{
-		//	int prev = arr[i]->getPrevNum();
-		//	T* neuronInput = new T[prev];
-		//	for (int j = 0; j < prev; j++, k++)
-		//	{
-		//		neuronInput[j] = input[k];
-		//	}
-		//
-		//	arr[i]->process(neuronInput, matrix->getStrWeights(i));
-		//}
-
-		T* out = new T[neurons];
-		int p = 0;
-		for (int i = 0; i < neurons; i++)
-		{
-			int next = arr[i]->getNextNum();
-			for (int j = 0; j < next; j++,p++)
-			{
-				out[p] = arr[i]->getOutput(j);
-			}
-		}
-		output = out;
-		return out;
+		return output;
 	}
 
-	T* getOutput(){return output;}
+	T* process(T* _input, AdjMatrix<T>* matrix)
+	{
+		input = _input;
+		for (int i = 0; i < neurons; i++)
+		{
+			output[i] = arr[i]->process(_input, matrix->getColWeights(i));
+		}
+		return output;
+	}
+
+	void setError(T* target)
+	{
+		for (int i = 0; i < neurons; i++)
+		{
+			error[i] = (target[i] - output[i]) * sigDerivative<T>(sum<T>(input, lenInput) + arr[i]->getBias());
+		}
+	}
+
+	void setError(T* errors, AdjMatrix<T>* matrix)
+	{
+		for (int i = 0; i < neurons; i++)
+		{
+			error[i] = weighedSum(errors, matrix->getStrWeights(i), lenOutput) * sigDerivative<T>(sum<T>(input, lenInput) + arr[i]->getBias());
+		}
+	}
+
+	T* getInput() { return input; }
+
+	T* getOutput() { return output; }
+
+	T* getError() { return error; }
+
+	T getError(int index) { return error[index]; }
+
 	BaseNeuron<T>** getNeurons() { return arr; }
+
 	int getQuantityOfNeurons() { return neurons; }
 };
 
@@ -341,61 +296,41 @@ class NeuralNet
 	Layer<T>** arrLayers;
 	AdjMatrix<T>** arrMatrixes;
 
-	void getStrFromFile(std::ifstream& trainSet)
+	T* getStrFromFile(std::ifstream& trainSet)
 	{
-				
+		int size = arrLayers[0]->getQuantityOfNeurons();
+		T* output = new T[size];
+		for (int i = 0; i < size; i++)
+		{			
+			trainSet >> output[i];
+			trainSet.get();
+		}
+		return output;
+	}
+
+	void backpropagation(T* target, T speed)
+	{
+		arrLayers[layers - 1]->setError(target);
+		for (int i = layers - 2; i > 0; i--)
+		{
+			arrLayers[i]->setError(arrLayers[i+1]->getError(), arrMatrixes[i]);
+		}
+
+		for (int i = 0; i < matrixes; i++)
+		{
+			arrMatrixes[i]->setWeights(arrLayers[i + 1]->getError(), arrLayers[i + 1]->getInput(),speed);
+		}
+
+		for (int i = 1; i < layers; i++)
+		{
+			for (int j = 0; j < arrLayers[i]->getQuantityOfNeurons(); j++)
+			{
+				arrLayers[i]->getNeurons()[j]->setBias(arrLayers[i]->getError(j), speed);
+			}
+		}
 	}
 
 public:																
-	NeuralNet(int _quantityOfLayers)
-	{
-		layers = _quantityOfLayers;
-		matrixes = layers - 1;
-						   											
-		arrLayers = new Layer<T>*[layers];
-		arrMatrixes = new AdjMatrix<T>*[matrixes];
-
-		int* neurons = new int[layers];
-		for (int i = 0; i < layers; i++)
-		{
-			neurons[i] = getValue<int>();
-		}
-
-		for (int i = 0; i < layers; i++)
-		{
-			if (i == 0)
-			{
-				arrLayers[i] = new Layer<T>(1, neurons[i], neurons[i + 1]);
-				continue;
-			}			 
-
-			if (i == layers - 1)   
-			{
-				arrLayers[i] = new Layer<T>(neurons[i - 1], neurons[i], 1);
-				continue;
-			}
-			arrLayers[i] = new Layer<T>(neurons[i - 1], neurons[i], neurons[i + 1]);
-		}
-
-		T** weights = new T*[matrixes];
-		for (int i = 0; i < matrixes; i++)
-		{
-			weights[i] = getArray<T>(neurons[i] * neurons[i + 1]);
-		}
-
-		for (int i = 0; i < matrixes; i++)
-		{
-			arrMatrixes[i] = new AdjMatrix<T>(neurons[i + 1], neurons[i], weights[i], arrLayers[i]->getNeurons(), arrLayers[i + 1]->getNeurons());
-		}
-
-		for (int i = 0; i < matrixes; i++)
-		{
-			delete weights[i];
-		}
-		delete[] weights;
-		delete[] neurons;
-	}
-
 	NeuralNet(std::ifstream& configFile)
 	{
 		configFile >> layers;
@@ -410,20 +345,30 @@ public:
 			configFile >> neurons[i];
 		}
 
+		T** biases = new T*[layers];
+		for (int i = 0; i < layers; i++)
+		{
+			biases[i] = new T[neurons[i]];
+			for (int j = 0; j < neurons[i]; j++)
+			{
+				configFile >> biases[i][j];
+			}
+		}
+
 		for (int i = 0; i < layers; i++)
 		{
 			if (i == 0)
 			{
-				arrLayers[i] = new Layer<T>(1, neurons[i], neurons[i + 1]);
+				arrLayers[i] = new Layer<T>(1, neurons[i], neurons[i + 1],biases[i]);
 				continue;
 			}
 
 			if (i == layers - 1)
 			{
-				arrLayers[i] = new Layer<T>(neurons[i - 1], neurons[i], 1);
+				arrLayers[i] = new Layer<T>(neurons[i - 1], neurons[i], 1, biases[i]);
 				continue;
 			}
-			arrLayers[i] = new Layer<T>(neurons[i - 1], neurons[i], neurons[i + 1]);
+			arrLayers[i] = new Layer<T>(neurons[i - 1], neurons[i], neurons[i + 1], biases[i]);
 		}
 
 		T** weights = new T*[matrixes];
@@ -446,32 +391,105 @@ public:
 			delete weights[i];
 		}
 		delete[] weights;
+		for (int i = 0; i < layers; i++)
+		{
+			delete biases[i];
+		}
+		delete[] biases;
 		delete[] neurons;
-	}
-
-	void train(std::ifstream& trainSet, int numOfIterations)
-	{
-		
 	}
 
 	T* process(T* input)
 	{
-		arrLayers[0]->process(input, arrMatrixes[0]);
+		arrLayers[0]->process(input);
 
-		for (int i = 1; i < layers - 1; i++)
+		for (int i = 1; i < layers; i++)
 		{
-			arrLayers[i]->process(arrLayers[i - 1]->getOutput(), arrMatrixes[i]);
+			arrLayers[i]->process(arrLayers[i - 1]->getOutput(), arrMatrixes[i - 1]);
 		}
+		return arrLayers[layers - 1]->getOutput();
+	}
 
-		int size = arrLayers[layers-1]->getQuantityOfNeurons();
-		T* weights = new T[size];
-		for (int i = 0; i < size; i++)
+	void dataProcess(std::ifstream& set, int numOfIterations)
+	{
+		std::ofstream logFile("log.csv");
+		for (int i = 0; i < numOfIterations; i++)
 		{
-			weights[i] = 1;
+			int out_len = arrLayers[layers - 1]->getQuantityOfNeurons();
+			T* net_out = new T[out_len];
+			net_out = process(getStrFromFile(set));
+
+			for (int j = 0; j < out_len; j++)
+			{
+				if (net_out[j] < 0.5)
+					logFile << '0';
+				else
+					logFile << '1';
+				logFile << ";";
+			}
+
+			T* target_out = new T[out_len];
+			for (int k = 0; k < out_len; k++)
+			{
+				set >> target_out[k];
+				logFile << target_out[k];
+			}
+			logFile << "\n";
 		}
-		AdjMatrix<T>* addMatrix = new AdjMatrix<T>(1,size,weights);
-		arrLayers[layers-1]->process(arrLayers[layers-2]->getOutput(),addMatrix);
-		return arrLayers[layers-1]->getOutput();			
+		logFile.close();
+	}
+
+	void train(std::ifstream& trainSet, int numOfIterations, T speed)
+	{
+		for (int i = 0; i < numOfIterations; i++)
+		{
+			int out_len = arrLayers[layers - 1]->getQuantityOfNeurons();
+			T* net_out = new T[out_len];
+
+			net_out = process(getStrFromFile(trainSet));
+
+			T* target_out = new T[out_len];
+			for (int i = 0; i < out_len; i++)
+			{
+				trainSet >> target_out[i];
+				trainSet.get();
+			}
+			backpropagation(target_out, speed);
+		}
+	}
+
+	T getEffiency(std::ifstream& logFile)
+	{
+		T all = 0;
+		T right = 0;
+		T effiency;
+		int out_len = arrLayers[layers - 1]->getQuantityOfNeurons();
+		while (!logFile.eof())
+		{
+			T* output = new T[out_len];
+			T* target = new T[out_len];
+
+			for (int i = 0; i < out_len; i++)
+			{
+				logFile >> output[i];
+				logFile.get();
+			}
+
+			for (int i = 0; i < out_len; i++)
+			{
+				logFile >> target[i];
+				logFile.get();
+			}
+
+			for (int i = 0; i < out_len; i++)
+			{
+				if (output[i] = target[i])
+					right++;
+				all++;
+			}	
+		}
+		effiency =  right / (all);
+		return effiency;
 	}
 
 	void fileOutput(std::ofstream& file)
@@ -485,6 +503,15 @@ public:
 				file << " ";
 		}
 		file << "\n";
+
+		for (int i = 0; i < layers; i++)				
+		{
+			for (int j = 0; j < arrLayers[i]->getQuantityOfNeurons(); j++)				
+			{
+				file << arrLayers[i]->getNeurons()[j]->getBias() << " ";
+			}
+			file << "\n";
+		}
 
 		for (int k = 0; k < matrixes; k++)
 		{
@@ -504,36 +531,22 @@ public:
 };
 
 void main()
-{																		  
-	std::cout << "sig(2*2) =" << sig<double>(2 * 2) << "\n";
-	std::cout << "sig(2*4) =" << sig<double>(2 * 4) << "\n";
-	std::cout << "sig(2*5) =" << sig<double>(2 * 5) << "\n";
-	std::cout << "\n";
-	std::cout << "sig(3*3) =" << sig<double>(3*3) << "\n";
-	std::cout << "sig(3*6) =" << sig<double>(3*6) << "\n";
-	std::cout << "sig(3*7) =" << sig<double>(3*7) << "\n";
+{
+	//std::ifstream file("testConfig7.txt");
+	//std::ifstream set("simpleTrain.csv");
+	//NeuralNet<double> n(file);
+	//n.train(set, 15, 1);
 
-	double y1 = sig<double>(2 * 2);
-	double y2 = sig<double>(2 * 4);
-	double y3 = sig<double>(2 * 5);
-	double y4 = sig<double>(3 * 3);
-	double y5 = sig<double>(3 * 6);
-	double y6 = sig<double>(3 * 7);
+	//std::ifstream test("simpleTest.csv");
+	//n.dataProcess(test, 10);
 
-	double z1 = sig<double>(2 * (y1 + y4));
-	double z2 = sig<double>(3 * (y2 + y5));
-	double z3 = sig<double>(4 * (y3 + y6));
-
-	double c1 = sig<double>(z1 + z2 + z3);
-
-	std::cout << "test output is: " << c1;
-
-	std::ifstream file("mainConfig.txt");				   
+	std::ifstream file("mainConfig.txt");
+	std::ifstream trainSet("train.csv");
 	NeuralNet<double> n(file);
-	std::ifstream trainFile("simpleTest.csv");
+	n.train(trainSet, 20000, 1);
 
-	double arr[2] = { 2,3 };
-	std::cout << "\n";
-	double* out = n.process(arr);
-	std::cout << "net output is:" << out[0];
-}
+	std::ifstream testSet("test.csv");
+	n.dataProcess(testSet, 3900);
+	std::ifstream sameSet("test.csv");
+	n.getEffiency(sameSet);
+ }

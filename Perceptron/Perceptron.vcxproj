@@ -119,13 +119,21 @@
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="simpleTest.csv" />
+    <None Include="log.csv" />
+    <None Include="simpleTrain.csv" />
     <None Include="test.csv" />
     <None Include="train.csv" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="currentConfig.txt" />
     <Text Include="mainConfig.txt" />
+    <Text Include="simpleTest.csv" />
+    <Text Include="testConfig1.txt" />
+    <Text Include="testConfig3.txt" />
+    <Text Include="testConfig4.txt" />
+    <Text Include="testConfig5.txt" />
+    <Text Include="testConfig6.txt" />
+    <Text Include="testConfig7.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
