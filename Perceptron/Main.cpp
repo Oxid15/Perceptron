@@ -14,6 +14,40 @@ T randomWeight(int seed)
 	return weight;
 }
 
+float getEffiency(std::ifstream& logFile, int length)
+{
+	float all = 0;
+	float right = 0;
+	float effiency;
+	int out_len = length;
+	while (!logFile.eof())
+	{
+		float* output = new float[out_len];
+		float* target = new float[out_len];
+
+		for (int i = 0; i < out_len; i++)
+		{
+			logFile >> output[i];
+			logFile.get();
+		}
+
+		for (int i = 0; i < out_len; i++)
+		{
+			logFile >> target[i];
+			logFile.get();
+		}
+
+		for (int i = 0; i < out_len; i++)
+		{
+			if (output[i] = target[i])
+				right++;
+			all++;
+		}
+	}
+	effiency = right / (all);
+	return effiency;
+}
+
 template<typename T>
 T sig(T num) { return 1 / (1 + exp(-num)); }
 
@@ -385,23 +419,73 @@ class NeuralNet
 		return arrLayers[layers - 1]->getOutput();
 	}
 
-	void writeLog(std::ofstream& logFile , std::ofstream& results, T* net_out, std::ifstream& set, int out_len)
+	void writeLog(T* output, std::ofstream& file)
 	{
-		for (int i = 0; i < out_len; i++)
+		int len = arrLayers[layers - 1]->getNeuronsNum();
+		if (len != 1)
 		{
-			if (net_out[i] >= 0.5)
-				logFile << "1";
-			else
-				logFile << "0";
-			logFile << ";";
-		}	
-		logFile << "\n";
-
-		for (int i = 0; i < out_len; i++)
-		{
-			results << net_out[i];
-			results << "\n";
+			file << "\"";
+			for (int i = 0; i < len; i++)
+			{
+				file << output[i] << ",";
+			}
+			file << "\";";
 		}
+		else
+		{
+			file << output[0] << ";";
+		}
+		file << "\n";
+	}
+
+	void writeLog(T* output, T* target, std::ofstream& file)
+	{
+		int len = arrLayers[layers - 1]->getNeuronsNum();
+		if (len != 1)
+		{
+			file << "\"";
+			for (int i = 0; i < len; i++)
+			{
+				file << output[i] << ",";
+			}
+			file << "\";";
+	
+			file << "\"";
+			for (int i = 0; i < len; i++)
+			{
+				file << target[i] << ",";
+			}
+			file << "\";";
+	
+			T* error = new T[len];
+			for (int i = 0; i < len; i++)
+			{
+				error[i] = target[i] - output[i];
+			}
+	
+			file << "\"";
+			for (int i = 0; i < len; i++)
+			{
+				file << error[i] << ",";
+			}
+			file << "\";";
+	
+			T totalError = 0;
+			for (int i = 0; i < len; i++)
+			{
+				totalError += error[i] * error[i];
+				totalError *= 0.5;
+			}
+			file << totalError << ";";
+		}
+		else
+		{
+			file << output[0] << ";";
+			file << target[0] << ";";
+			T error = target[0] - output[0];
+			file << error << ";";
+		}
+		file << "\n";
 	}
 
 public:
@@ -483,29 +567,24 @@ public:
 		delete[] neurons;
 	}
 
-
 	void dataProcess(std::ifstream& set, int numOfIterations)
 	{
-		std::ofstream logFile("log.csv");
-		std::ofstream results("log.txt");
+		int out_len = arrLayers[layers - 1]->getNeuronsNum();
+		T* net_out = new T[out_len];
 		for (int i = 0; i < numOfIterations; i++)
 		{
-			int out_len = arrLayers[layers - 1]->getNeuronsNum();
-			T* net_out = new T[out_len];
+			std::ofstream log("testLog.csv", std::ios::app);
 			net_out = process(getStrFromFile(set));
-			writeLog(logFile, results, net_out, set, out_len);
+			writeLog(net_out, log);
 		}
 	}
 
 	void train(std::ifstream& trainSet, int numOfIterations, T speed)
 	{
-		std::ofstream logFile("log.csv");
-		std::ofstream logFile2("log.txt");
 		for (int i = 0; i < numOfIterations; i++)
 		{
 			int out_len = arrLayers[layers - 1]->getNeuronsNum();
 			T* net_out = new T[out_len];
-
 			net_out = process(getStrFromFile(trainSet));			  
 
 			T* target_out = new T[out_len];
@@ -514,45 +593,11 @@ public:
 				trainSet >> target_out[i];
 				trainSet.get();
 			}
+			backpropagation(target_out, speed);
 
-			writeLog(logFile, logFile2, net_out, trainSet, out_len);
-
-			backpropagation(target_out, speed);						 
+			std::ofstream log("trainLog.csv", std::ios::app);
+			writeLog(net_out, target_out, log);
 		}
-	}
-
-	T getEffiency(std::ifstream& logFile)
-	{
-		T all = 0;
-		T right = 0;
-		T effiency;
-		int out_len = arrLayers[layers - 1]->getNeuronsNum();
-		while (!logFile.eof())
-		{
-			T* output = new T[out_len];
-			T* target = new T[out_len];
-
-			for (int i = 0; i < out_len; i++)
-			{
-				logFile >> output[i];
-				logFile.get();
-			}
-
-			for (int i = 0; i < out_len; i++)
-			{
-				logFile >> target[i];
-				logFile.get();
-			}
-
-			for (int i = 0; i < out_len; i++)
-			{
-				if (output[i] = target[i])
-					right++;
-				all++;
-			}
-		}
-		effiency = right / (all);
-		return effiency;
 	}
 
 	void fileOutput(std::ofstream& file)
@@ -601,8 +646,10 @@ public:
 
 void main()
 {
-	std::ifstream file("testConfig7.txt");
+	std::ifstream file("testConfig.txt");
 	NeuralNet<double> n(file);
+	std::ifstream set("simpleTrain.csv");
+	n.train(set, 28, 1);
 	std::ifstream test("simpleTest.csv");
 	n.dataProcess(test, 4);
 }
