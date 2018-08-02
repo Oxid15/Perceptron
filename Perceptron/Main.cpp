@@ -58,7 +58,7 @@ void setRandomWeights(std::ifstream& inFile, std::ofstream& outFile, int seed)
 	{
 		for (int i = 0; i < neurons[k]; i++)
 		{
-			for (int j = 0; j < neurons[k+1]; j++)
+			for (int j = 0; j < neurons[k + 1]; j++)
 			{
 				outFile << randomWeight<T>(seed) << " ";
 				seed++;
@@ -73,6 +73,30 @@ T sig(T num) { return 1 / (1 + exp(-num)); }
 
 template<typename T>
 T sigDerivative(T num) { return sig<T>((num)*(1 - sig<T>(num))); }
+
+template<typename T>
+T treshold_function(T num)
+{
+	if (num >= 0)
+		return 1;
+	else
+		return 0;
+}
+
+template<typename T>
+T ReLU(T num)
+{
+	if (num >= 0)
+		return num;
+	else
+		return 0;
+}
+
+template<typename T>
+T softplus(T num) { return log(1 + exp(num)); }
+
+template<typename T>
+T softplusDerivative(T num) { return sig(num); }
 
 template<typename T>
 T sum(T* in, int n)
@@ -96,7 +120,7 @@ T weighedSum(T* in, T* weights, int n)
 	return sum;
 }
 
-enum functionType { sigmoid, step_func };
+enum functionType { sigmoid, treshold_func, relu, softpls };
 
 template<typename T>
 class BaseNeuron
@@ -110,23 +134,27 @@ class BaseNeuron
 	template<typename T>
 	T activation(T num, functionType type)
 	{
-		if (type)
+		switch (type)
 		{
-			if (num > bias)
-				return 1;
-			else
-				return 0;
-		}
-		else
+		case sigmoid:
 			return sig(num);
+		case treshold_func:
+			return treshold_function(num);
+		case relu:
+			return ReLU(num);
+		case softpls:
+			return softplus(num);
+		}
 	}
 
 public:
 
 	BaseNeuron()
 	{
+		bias = 0;
 		prevNum = 1;
 		nextNum = 1;
+		in = new T[prevNum];
 	}
 
 	~BaseNeuron() { delete in; }
@@ -225,10 +253,20 @@ public:
 		{
 			for (int j = 0; j < length; j++)
 			{
-				arr[j][i].setLeftNeuron(leftNeurons[k]);
-				arr[j][i].setRightNeuron(rightNeurons[k]);
-				arr[j][i].setWeight(weights[k]);
-				k++;
+				if (j != length - 1)
+				{
+					arr[j][i].setLeftNeuron(leftNeurons[k]);
+					arr[j][i].setRightNeuron(rightNeurons[k]);
+					arr[j][i].setWeight(weights[k]);
+					k++;
+				}
+				else
+				{
+					arr[j][i].setLeftNeuron(leftNeurons[k]);
+					arr[j][i].setRightNeuron(new BaseNeuron<T>);
+					arr[j][i].setWeight(weights[k]);
+					k++;
+				}
 			}
 		}
 	}
@@ -502,7 +540,7 @@ public:
 		functionType _type;
 		configFile >> intType;
 		if (intType)
-			_type = step_func;
+			_type = treshold_func;
 		else
 			_type = sigmoid;
 
@@ -654,13 +692,5 @@ public:
 
 void main()
 {
-	std::ifstream in("testConfig.txt");
-	std::ofstream out("currentConfig.txt");
-	int seed = 577;
-	setRandomWeights<double>(in, out, seed);
-	out.close();
-
-	std::ifstream conf("currentConfig.txt");
-	NeuralNet<double> n(conf);
-	conf.close();
+	
 }

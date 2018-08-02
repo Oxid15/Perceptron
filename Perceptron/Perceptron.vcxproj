@@ -124,6 +124,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="currentConfig.txt" />
+    <Text Include="OR.txt" />
     <Text Include="testLog.csv" />
     <Text Include="simpleTest.csv" />
     <Text Include="testConfig.txt" />
