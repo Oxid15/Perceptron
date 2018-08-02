@@ -1,5 +1,5 @@
 #include<math.h>
-#include<fstream>
+#include<fstream>									  
 #include<cstdlib>
 #include<iostream>
 
@@ -8,44 +8,64 @@ T randomWeight(int seed)
 {
 	T weight;
 	srand(seed);
-	weight = 0.0001*(rand() % 5000 + 3000);
+	weight = 0.1*(rand() % 100);
 	if (seed % 2)
 		weight = weight - 2 * weight;
 	return weight;
 }
 
-float getEffiency(std::ifstream& logFile, int length)
+template<typename T>
+void setRandomWeights(std::ifstream& inFile, std::ofstream& outFile, int seed)
 {
-	float all = 0;
-	float right = 0;
-	float effiency;
-	int out_len = length;
-	while (!logFile.eof())
+	int layers;
+	inFile >> layers;
+
+	int type;
+	inFile >> type;
+
+	int* neurons = new int[layers];
+	for (int i = 0; i < layers; i++)
 	{
-		float* output = new float[out_len];
-		float* target = new float[out_len];
-
-		for (int i = 0; i < out_len; i++)
-		{
-			logFile >> output[i];
-			logFile.get();
-		}
-
-		for (int i = 0; i < out_len; i++)
-		{
-			logFile >> target[i];
-			logFile.get();
-		}
-
-		for (int i = 0; i < out_len; i++)
-		{
-			if (output[i] = target[i])
-				right++;
-			all++;
-		}
+		inFile >> neurons[i];
 	}
-	effiency = right / (all);
-	return effiency;
+
+	outFile << layers << "\n";
+
+	outFile << type << "\n";
+
+	for (int i = 0; i < layers; i++)
+	{
+		outFile << neurons[i];
+		if (i != layers - 1)
+			outFile << " ";
+	}
+	outFile << "\n";
+
+	for (int i = 0; i < layers; i++)
+	{
+		for (int j = 0; j < neurons[i]; j++)
+		{
+			if (i)
+				outFile << randomWeight<T>(seed) << " ";
+			else
+				outFile << "0 ";
+			seed++;
+		}
+		outFile << "\n";
+	}
+
+	for (int k = 0; k < layers - 1; k++)
+	{
+		for (int i = 0; i < neurons[k]; i++)
+		{
+			for (int j = 0; j < neurons[k+1]; j++)
+			{
+				outFile << randomWeight<T>(seed) << " ";
+				seed++;
+			}
+		}
+		outFile << "\n";
+	}
 }
 
 template<typename T>
@@ -174,7 +194,7 @@ public:
 
 	void addToWeight(T addend)
 	{
-		weight += addend;							
+		weight += addend;
 	}
 
 	T getWeight() { return weight; }
@@ -300,7 +320,7 @@ public:
 		lenInput = prevNum;
 
 		input = new T[lenInput];
-		output = new T[neurons];		
+		output = new T[neurons];
 		error = new T[neurons];
 	}
 
@@ -363,7 +383,7 @@ public:
 	BaseNeuron<T>** getNeurons() { return arr; }
 
 	int getNeuronsNum() { return neurons; }
-};									   
+};
 
 template<typename T>
 class NeuralNet
@@ -419,25 +439,6 @@ class NeuralNet
 		return arrLayers[layers - 1]->getOutput();
 	}
 
-	void writeLog(T* output, std::ofstream& file)
-	{
-		int len = arrLayers[layers - 1]->getNeuronsNum();
-		if (len != 1)
-		{
-			file << "\"";
-			for (int i = 0; i < len; i++)
-			{
-				file << output[i] << ",";
-			}
-			file << "\";";
-		}
-		else
-		{
-			file << output[0] << ";";
-		}
-		file << "\n";
-	}
-
 	void writeLog(T* output, T* target, std::ofstream& file)
 	{
 		int len = arrLayers[layers - 1]->getNeuronsNum();
@@ -449,27 +450,27 @@ class NeuralNet
 				file << output[i] << ",";
 			}
 			file << "\";";
-	
+
 			file << "\"";
 			for (int i = 0; i < len; i++)
 			{
 				file << target[i] << ",";
 			}
 			file << "\";";
-	
+
 			T* error = new T[len];
 			for (int i = 0; i < len; i++)
 			{
 				error[i] = target[i] - output[i];
 			}
-	
+
 			file << "\"";
 			for (int i = 0; i < len; i++)
 			{
 				file << error[i] << ",";
 			}
 			file << "\";";
-	
+
 			T totalError = 0;
 			for (int i = 0; i < len; i++)
 			{
@@ -497,6 +498,16 @@ public:
 		arrLayers = new Layer<T>*[layers];
 		arrMatrixes = new AdjMatrix<T>*[matrixes];
 
+		int intType;
+		functionType _type;
+		configFile >> intType;
+		if (intType)
+			_type = step_func;
+		else
+			_type = sigmoid;
+
+		type = _type;
+
 		int* neurons = new int[layers];
 		for (int i = 0; i < layers; i++)
 		{
@@ -512,16 +523,6 @@ public:
 				configFile >> biases[i][j];
 			}
 		}
-
-		int intType;
-		functionType _type;
-		configFile >> intType;
-		if (intType)
-			_type = step_func;
-		else
-			_type = sigmoid;
-
-		type = _type;
 
 		for (int i = 0; i < layers; i++)
 		{
@@ -569,13 +570,21 @@ public:
 
 	void dataProcess(std::ifstream& set, int numOfIterations)
 	{
-		int out_len = arrLayers[layers - 1]->getNeuronsNum();
-		T* net_out = new T[out_len];
 		for (int i = 0; i < numOfIterations; i++)
 		{
-			std::ofstream log("testLog.csv", std::ios::app);
+			int out_len = arrLayers[layers - 1]->getNeuronsNum();
+			T* net_out = new T[out_len];
 			net_out = process(getStrFromFile(set));
-			writeLog(net_out, log);
+
+			T* target_out = new T[out_len];
+			for (int i = 0; i < out_len; i++)
+			{
+				set >> target_out[i];
+				set.get();
+			}
+
+			std::ofstream log("testLog.csv", std::ios::app);
+			writeLog(net_out, target_out, log);
 		}
 	}
 
@@ -585,7 +594,7 @@ public:
 		{
 			int out_len = arrLayers[layers - 1]->getNeuronsNum();
 			T* net_out = new T[out_len];
-			net_out = process(getStrFromFile(trainSet));			  
+			net_out = process(getStrFromFile(trainSet));
 
 			T* target_out = new T[out_len];
 			for (int i = 0; i < out_len; i++)
@@ -604,6 +613,11 @@ public:
 	{
 		file << layers << "\n";
 
+		if (type)
+			file << "1\n";
+		else
+			file << "0\n";
+
 		for (int i = 0; i < layers; i++)
 		{
 			file << arrLayers[i]->getNeuronsNum();
@@ -620,12 +634,6 @@ public:
 			}
 			file << "\n";
 		}
-
-		if (type)
-			file << "1\n";
-		else
-			file << "0\n";
-		
 
 		for (int k = 0; k < matrixes; k++)
 		{
@@ -646,10 +654,13 @@ public:
 
 void main()
 {
-	std::ifstream file("testConfig.txt");
-	NeuralNet<double> n(file);
-	std::ifstream set("simpleTrain.csv");
-	n.train(set, 28, 1);
-	std::ifstream test("simpleTest.csv");
-	n.dataProcess(test, 4);
+	std::ifstream in("testConfig.txt");
+	std::ofstream out("currentConfig.txt");
+	int seed = 577;
+	setRandomWeights<double>(in, out, seed);
+	out.close();
+
+	std::ifstream conf("currentConfig.txt");
+	NeuralNet<double> n(conf);
+	conf.close();
 }
