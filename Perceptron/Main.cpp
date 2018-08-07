@@ -120,6 +120,50 @@ T weighedSum(T* in, T* weights, int n)
 	return sum;
 }
 
+template<typename T>
+T getEffiency(std::ifstream& file, int output_length, int numberOfPairs)
+{
+	T all = 0;
+	T correct = 0;
+	T eff;
+	for (int p = 0; p < numberOfPairs; p++)
+	{
+		for (int k = 0; k < output_length; k++)
+		{
+			T* output = new T[output_length];			
+			T* target = new T[output_length];
+			for (int i = 0; i < output_length; i++)
+			{
+				file >> output[i];
+				file.get();
+			}
+			for (int i = 0; i < output_length; i++)
+			{
+				file >> target[i];
+				file.get();
+			}
+			for (int i = 0; i < output_length; i++)
+			{
+				if ((output[i] > 0 && output[i] < 1) &&
+					(target[i] >= 0 && target[i] <= 1))
+				{
+					if (output[i] >= 0.5)
+						output[i] = 1;
+					else
+						output[i] = 0;
+				}
+
+				if (output[i] == target[i])
+					correct++;
+			}
+			all++;
+			delete output;
+			delete target;
+		}
+	}
+	return eff = correct / all;
+}
+
 enum functionType { sigmoid, treshold_func, relu, softpls };
 
 template<typename T>
@@ -170,7 +214,7 @@ public:
 	T process(T* _in, T* weights, functionType type)
 	{
 		in = _in;
-		out = activation(weighedSum(in, weights, prevNum), type);
+		out = activation(weighedSum(in, weights, prevNum) + bias, type); //////////
 		return out;
 	}
 
@@ -304,6 +348,17 @@ public:
 			}
 		}
 
+	}
+
+	void fileOutput(std::ofstream& file)
+	{
+		for (int i = 0; i < height; i++)
+		{
+			for (int j = 0; j < length; j++)
+			{
+				file << arr[j][i].getWeight() << ";";
+			}
+		}
 	}
 
 	T* getStrWeights(int index)
@@ -494,37 +549,13 @@ class NeuralNet
 			{
 				file << target[i] << ",";
 			}
-			file << "\";";
-
-			T* error = new T[len];
-			for (int i = 0; i < len; i++)
-			{
-				error[i] = target[i] - output[i];
-			}
-
-			file << "\"";
-			for (int i = 0; i < len; i++)
-			{
-				file << error[i] << ",";
-			}
-			file << "\";";
-
-			T totalError = 0;
-			for (int i = 0; i < len; i++)
-			{
-				totalError += error[i] * error[i];
-				totalError *= 0.5;
-			}
-			file << totalError << ";";
+			file << "\";\n";
 		}
 		else
 		{
 			file << output[0] << ";";
-			file << target[0] << ";";
-			T error = target[0] - output[0];
-			file << error << ";";
+			file << target[0] << ";\n";	 
 		}
-		file << "\n";
 	}
 
 public:
@@ -541,7 +572,7 @@ public:
 		configFile >> intType;
 		if (intType)
 			_type = treshold_func;
-		else
+		else									  // !!!!!!!!
 			_type = sigmoid;
 
 		type = _type;
@@ -608,6 +639,7 @@ public:
 
 	void dataProcess(std::ifstream& set, int numOfIterations)
 	{
+		std::ofstream log("testLog.csv");
 		for (int i = 0; i < numOfIterations; i++)
 		{
 			int out_len = arrLayers[layers - 1]->getNeuronsNum();
@@ -620,8 +652,6 @@ public:
 				set >> target_out[i];
 				set.get();
 			}
-
-			std::ofstream log("testLog.csv", std::ios::app);
 			writeLog(net_out, target_out, log);
 		}
 	}
@@ -653,7 +683,7 @@ public:
 
 		if (type)
 			file << "1\n";
-		else
+		else								// !!!!!!!!
 			file << "0\n";
 
 		for (int i = 0; i < layers; i++)
@@ -688,9 +718,53 @@ public:
 			file << "\n";
 		}
 	}
+
+	void weightsOutput(std::ofstream& file)
+	{
+		for (int i = 1; i < layers; i++)
+		{
+			for (int j = 0; j < arrLayers[i]->getNeuronsNum(); j++)
+			{
+				file << arrLayers[i]->getNeurons()[j]->getBias() << ";";
+			}
+		}
+
+		for (int i = 0; i < matrixes; i++)
+		{
+			arrMatrixes[i]->fileOutput(file);
+		}
+		file << "\n";
+	}
 };
 
 void main()
 {
-	
+	int numEpoch = 10;
+	int numIter = 4;
+	for (int i = 0; i < numEpoch; i++)
+	{
+		std::ifstream config("currentConfig.txt");
+		NeuralNet<float>n(config);
+		config.close();
+
+		std::ifstream set("simpleTest.csv");
+		n.train(set, numIter, 0.001);
+		set.close();
+
+		std::ifstream test("simpleTest.csv");
+		n.dataProcess(test, numIter);
+		test.close();
+
+		std::ifstream testLog("testLog.csv");
+		std::ofstream effLog("effLog.csv", std::ios::app);
+		effLog << getEffiency<float>(testLog, 1, numIter) << ";\n";
+
+		std::ofstream output("currentConfig.txt");
+		n.fileOutput(output);
+		output.close();
+
+		std::ofstream weightLog("weightLog.csv", std::ios::app);
+		n.weightsOutput(weightLog);
+		weightLog.close();
+	}
 }

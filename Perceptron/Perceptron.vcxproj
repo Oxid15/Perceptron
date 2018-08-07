@@ -119,12 +119,13 @@
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="effLog.csv" />
     <None Include="trainLog.csv" />
     <None Include="simpleTrain.csv" />
+    <None Include="weightLog.csv" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="currentConfig.txt" />
-    <Text Include="OR.txt" />
     <Text Include="testLog.csv" />
     <Text Include="simpleTest.csv" />
     <Text Include="testConfig.txt" />
