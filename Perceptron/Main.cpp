@@ -2,6 +2,7 @@
 #include<fstream>									  
 #include<cstdlib>
 #include<iostream>
+#include<string>
 
 template<typename T>
 T randomWeight(int seed)
@@ -164,6 +165,15 @@ T getEffiency(std::ifstream& file, int output_length, int numberOfPairs)
 	return eff = correct / all;
 }
 
+void clearFiles(std::string* name, int number)
+{
+	for (int i = 0; i < number; i++)
+	{
+		std::ofstream file(name[i]);
+		file << '\b';
+	}
+}
+
 enum functionType { sigmoid, treshold_func, relu, softpls };
 
 template<typename T>
@@ -214,7 +224,7 @@ public:
 	T process(T* _in, T* weights, functionType type)
 	{
 		in = _in;
-		out = activation(weighedSum(in, weights, prevNum) + bias, type); //////////
+		out = activation(weighedSum(in, weights, prevNum) + bias, type);
 		return out;
 	}
 
@@ -336,7 +346,7 @@ public:
 		{
 			for (int j = 0; j < length; j++)
 			{
-				dWeights[j][i] = -(speed * layerInput[i] * layerError[j]);
+				dWeights[j][i] = (speed * layerInput[i] * layerError[j]);				////////--------
 			}
 		}
 
@@ -453,7 +463,7 @@ public:
 	{
 		for (int i = 0; i < neurons; i++)
 		{
-			error[i] = (target[i] - output[i]) * sigDerivative<T>(sum<T>(input, lenInput) + arr[i]->getBias());
+			error[i] = (target[i] - output[i]) * sigDerivative<T>(sum<T>(input, lenInput) + arr[i]->getBias());					///////////////////
 		}
 	}
 
@@ -461,7 +471,7 @@ public:
 	{
 		for (int i = 0; i < neurons; i++)
 		{
-			error[i] = weighedSum(errors, matrix->getStrWeights(i), neurons) * sigDerivative<T>(sum<T>(input, lenInput) + arr[i]->getBias());
+			error[i] = weighedSum(errors, matrix->getStrWeights(i), neurons) * sigDerivative<T>(sum<T>(input, lenInput) + arr[i]->getBias());		  /////////////////
 		}
 	}
 
@@ -501,23 +511,30 @@ class NeuralNet
 
 	void backpropagation(T* target, T speed)
 	{
-		arrLayers[layers - 1]->setError(target);
-		for (int i = layers - 2; i > 0; i--)
+		if (type == sigmoid || type == softpls)
 		{
-			arrLayers[i]->setError(arrLayers[i + 1]->getError(), arrMatrixes[i]);
-		}
-
-		for (int i = 0; i < matrixes; i++)
-		{
-			arrMatrixes[i]->setWeights(arrLayers[i + 1]->getError(), arrLayers[i + 1]->getInput(), speed);
-		}
-
-		for (int i = 1; i < layers; i++)
-		{
-			for (int j = 0; j < arrLayers[i]->getNeuronsNum(); j++)
+			arrLayers[layers - 1]->setError(target);
+			for (int i = layers - 2; i > 0; i--)
 			{
-				arrLayers[i]->getNeurons()[j]->setBias(arrLayers[i]->getError(j), speed);
+				arrLayers[i]->setError(arrLayers[i + 1]->getError(), arrMatrixes[i]);
 			}
+
+			for (int i = 0; i < matrixes; i++)
+			{
+				arrMatrixes[i]->setWeights(arrLayers[i + 1]->getError(), arrLayers[i + 1]->getInput(), speed);
+			}
+
+			for (int i = 1; i < layers; i++)
+			{
+				for (int j = 0; j < arrLayers[i]->getNeuronsNum(); j++)
+				{
+					arrLayers[i]->getNeurons()[j]->setBias(arrLayers[i]->getError(j), speed);
+				}
+			}
+		}
+		else
+		{
+			// delta-rule if layers == 2
 		}
 	}
 
@@ -567,15 +584,22 @@ public:
 		arrLayers = new Layer<T>*[layers];
 		arrMatrixes = new AdjMatrix<T>*[matrixes];
 
-		int intType;
-		functionType _type;
-		configFile >> intType;
-		if (intType)
-			_type = treshold_func;
-		else									  // !!!!!!!!
-			_type = sigmoid;
-
-		type = _type;
+		int _type;
+		configFile >> _type;
+		switch (_type)
+		{
+		case 0:
+			type = sigmoid;
+			break;
+		case 1:
+			type = treshold_func;
+			break;
+		case 2:
+			type = relu;
+			break;
+		case 3:
+			type = softpls;
+		}
 
 		int* neurons = new int[layers];
 		for (int i = 0; i < layers; i++)
@@ -624,15 +648,9 @@ public:
 			arrMatrixes[i] = new AdjMatrix<T>(neurons[i + 1], neurons[i], weights[i], arrLayers[i]->getNeurons(), arrLayers[i + 1]->getNeurons());
 		}
 
-		for (int i = 0; i < matrixes; i++)
-		{
-			delete weights[i];
-		}
+		for (int i = 0; i < matrixes; i++){ delete weights[i]; }
 		delete[] weights;
-		for (int i = 0; i < layers; i++)
-		{
-			delete biases[i];
-		}
+		for (int i = 0; i < layers; i++) { delete biases[i]; }
 		delete[] biases;
 		delete[] neurons;
 	}
@@ -681,10 +699,20 @@ public:
 	{
 		file << layers << "\n";
 
-		if (type)
-			file << "1\n";
-		else								// !!!!!!!!
+		switch (type)
+		{
+		case sigmoid:
 			file << "0\n";
+			break;
+		case treshold_func:
+			file << "1\n";
+			break;
+		case relu:
+			file << "2\n";
+			break;
+		case softpls:
+			file << "3\n";
+		}
 
 		for (int i = 0; i < layers; i++)
 		{
@@ -739,7 +767,7 @@ public:
 
 void main()
 {
-	int numEpoch = 10;
+	int numEpoch = 12000;
 	int numIter = 4;
 	for (int i = 0; i < numEpoch; i++)
 	{
@@ -758,6 +786,8 @@ void main()
 		std::ifstream testLog("testLog.csv");
 		std::ofstream effLog("effLog.csv", std::ios::app);
 		effLog << getEffiency<float>(testLog, 1, numIter) << ";\n";
+		testLog.close();
+		effLog.close();
 
 		std::ofstream output("currentConfig.txt");
 		n.fileOutput(output);
@@ -767,4 +797,7 @@ void main()
 		n.weightsOutput(weightLog);
 		weightLog.close();
 	}
+
+	//std::string logs[3] = { "testLog.csv", "effLog.csv","trainLog.csv" };
+	//clearFiles(logs,3);
 }
