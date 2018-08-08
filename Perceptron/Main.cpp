@@ -261,57 +261,20 @@ public:
 };
 
 template<typename T>
-class MatrixUnit
-{
-	BaseNeuron<T>* leftNeuron;
-	BaseNeuron<T>* rightNeuron;
-	T weight;
-public:
-
-	MatrixUnit()
-	{
-		leftNeuron = new BaseNeuron<T>;
-		rightNeuron = new BaseNeuron<T>;
-		weight = 0;
-	}
-
-	~MatrixUnit()
-	{
-		delete leftNeuron;
-		delete rightNeuron;
-	}
-
-	void setLeftNeuron(BaseNeuron<T>* _neuron) { leftNeuron = _neuron; }
-	void setRightNeuron(BaseNeuron<T>* _neuron) { rightNeuron = _neuron; }
-
-	void setWeight(T _weight) { weight = _weight; }
-
-	void addToWeight(T addend)
-	{
-		weight += addend;
-	}
-
-	T getWeight() { return weight; }
-
-	BaseNeuron<T>* getleftNeuron() { return leftNeuron; }
-	BaseNeuron<T>* getrightNeuron() { return rightNeuron; }
-};
-
-template<typename T>
 class AdjMatrix
 {
-	MatrixUnit<T> ** arr;
+	T** arr;
 	int length;
 	int height;
 public:
-	AdjMatrix(int _length, int _height, T* weights, BaseNeuron<T>** leftNeurons, BaseNeuron<T>** rightNeurons)
+	AdjMatrix(int _length, int _height, T* weights)
 	{
 		length = _length;
 		height = _height;
-		arr = new MatrixUnit<T>*[length];
+		arr = new T*[length];
 		for (int i = 0; i < length; i++)
 		{
-			arr[i] = new MatrixUnit<T>[height];
+			arr[i] = new T[height];
 		}
 
 		int k = 0;
@@ -319,20 +282,8 @@ public:
 		{
 			for (int j = 0; j < length; j++)
 			{
-				if (j != length - 1)
-				{
-					arr[j][i].setLeftNeuron(leftNeurons[k]);
-					arr[j][i].setRightNeuron(rightNeurons[k]);
-					arr[j][i].setWeight(weights[k]);
-					k++;
-				}
-				else
-				{
-					arr[j][i].setLeftNeuron(leftNeurons[k]);
-					arr[j][i].setRightNeuron(new BaseNeuron<T>);
-					arr[j][i].setWeight(weights[k]);
-					k++;
-				}
+				arr[j][i] = weights[k];
+				k++;
 			}
 		}
 	}
@@ -366,7 +317,7 @@ public:
 		{
 			for (int j = 0; j < length; j++)
 			{
-				arr[j][i].addToWeight(dWeights[j][i]);
+				arr[j][i] += dWeights[j][i];
 			}
 		}
 
@@ -378,7 +329,7 @@ public:
 		{
 			for (int j = 0; j < length; j++)
 			{
-				file << arr[j][i].getWeight() << ";";
+				file << arr[j][i] << ";";
 			}
 		}
 	}
@@ -388,7 +339,7 @@ public:
 		T* temp = new T[length];
 		for (int i = 0; i < length; i++)
 		{
-			temp[i] = arr[i][index].getWeight();
+			temp[i] = arr[i][index];
 		}
 		return temp;
 	}
@@ -398,14 +349,14 @@ public:
 		T* temp = new T[height];
 		for (int i = 0; i < height; i++)
 		{
-			temp[i] = arr[index][i].getWeight();
+			temp[i] = arr[index][i];
 		}
 		return temp;
 	}
 
 	T getWeight(int i, int j)
 	{
-		return arr[i][j].getWeight();
+		return arr[i][j];
 	}
 
 	int getLength() { return length; }
@@ -658,7 +609,7 @@ public:
 
 		for (int i = 0; i < matrixes; i++)
 		{
-			arrMatrixes[i] = new AdjMatrix<T>(neurons[i + 1], neurons[i], weights[i], arrLayers[i]->getNeurons(), arrLayers[i + 1]->getNeurons());
+			arrMatrixes[i] = new AdjMatrix<T>(neurons[i + 1], neurons[i], weights[i]);
 		}
 	}
 
@@ -774,43 +725,50 @@ public:
 
 void main()
 {
-	//std::ifstream in("testConfig.txt");
-	//std::ofstream out("currentConfig.txt");
-	//setRandomWeights<float>(in, out, 228);
-	//in.close();
-	//out.close();
+	//int num = 4;
+	//for (int k = 0; k < num; k++)
+	//{
+	//	std::ifstream in("testConfig.txt");
+	//	std::ofstream out("currentConfig.txt");
+	//	setRandomWeights<float>(in, out, k + num*3);
+	//	in.close();
+	//	out.close();
 
-	int numEpoch = 5000;
-	int numIter = 4;
-	for (int i = 0; i < numEpoch; i++)
-	{
-		std::ifstream config("currentConfig.txt");
-		NeuralNet<float>n(config);
-		config.close();
+		int numEpoch = 10000;
+		int numIter = 4;
+		for (int i = 0; i < numEpoch; i++)
+		{
+			std::ifstream config("currentConfig.txt");
+			NeuralNet<float>n(config);
+			config.close();
 
-		std::ifstream set("simpleTest.csv");
-		n.train(set, numIter, 0.001);
-		set.close();
+			std::ifstream set("simpleTest.csv");
+			n.train(set, numIter, 0.001);
+			set.close();
 
-		std::ifstream test("simpleTest.csv");
-		n.dataProcess(test, numIter);
-		test.close();
+			std::ifstream test("simpleTest.csv");
+			n.dataProcess(test, numIter);
+			test.close();
 
-		std::ifstream testLog("testLog.csv");
-		std::ofstream effLog("effLog.csv", std::ios::app);
-		effLog << getEffiency<float>(testLog, 1, numIter) << ";\n";
-		testLog.close();
-		effLog.close();
+			std::ifstream testLog("testLog.csv");
+			std::ofstream effLog("effLog.csv", std::ios::app);
+			float eff = getEffiency<float>(testLog, 1, numIter);
+			effLog << eff << ";\n";
+			testLog.close();
+			effLog.close();
 
-		std::ofstream output("currentConfig.txt");
-		n.fileOutput(output);
-		output.close();
+			std::ofstream output("currentConfig.txt");
+			n.fileOutput(output);
+			output.close();
 
-		std::ofstream weightLog("weightLog.csv", std::ios::app);
-		n.weightsOutput(weightLog);
-		weightLog.close();
-	}
+			std::ofstream weightLog("weightLog.csv", std::ios::app);
+			n.weightsOutput(weightLog);
+			weightLog.close();
 
+			if (eff == 1)
+				return;
+		}
+	//}
 	//std::string logs[3] = { "testLog.csv", "effLog.csv","trainLog.csv" };
 	//clearFiles(logs,3);
 }
