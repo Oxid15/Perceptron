@@ -4,6 +4,8 @@
 #include<iostream>
 #include<string>
 
+enum functionType { sigmoid, treshold_func, relu, softpls };
+
 template<typename T>
 T randomWeight(int seed)
 {
@@ -100,6 +102,19 @@ template<typename T>
 T softplusDerivative(T num) { return sig(num); }
 
 template<typename T>
+T derivative(functionType type, T num)
+{
+	switch (type)
+	{
+	case sigmoid:
+		return sigDerivative(num);
+	case softpls:
+		return softplusDerivative(num);
+	}
+}
+
+
+template<typename T>
 T sum(T* in, int n)
 {
 	T sum = 0;
@@ -131,7 +146,7 @@ T getEffiency(std::ifstream& file, int output_length, int numberOfPairs)
 	{
 		for (int k = 0; k < output_length; k++)
 		{
-			T* output = new T[output_length];			
+			T* output = new T[output_length];
 			T* target = new T[output_length];
 			for (int i = 0; i < output_length; i++)
 			{
@@ -173,8 +188,6 @@ void clearFiles(std::string* name, int number)
 		file << '\b';
 	}
 }
-
-enum functionType { sigmoid, treshold_func, relu, softpls };
 
 template<typename T>
 class BaseNeuron
@@ -234,10 +247,9 @@ public:
 		return out;
 	}
 
-	void setBias(T error, T speed)
-	{
-		bias += speed * error;
-	}
+	void addBias(T error, T speed) { bias += speed * error; }
+
+	void setBias(T _bias) { bias = _bias; }
 
 	T getBias() { return bias; }
 
@@ -346,7 +358,7 @@ public:
 		{
 			for (int j = 0; j < length; j++)
 			{
-				dWeights[j][i] = (speed * layerInput[i] * layerError[j]);				////////--------
+				dWeights[j][i] = speed * layerInput[i] * layerError[j];
 			}
 		}
 
@@ -393,8 +405,7 @@ public:
 
 	T getWeight(int i, int j)
 	{
-		MatrixUnit<T> neuron = arr[i][j];
-		return neuron.getWeight();
+		return arr[i][j].getWeight();
 	}
 
 	int getLength() { return length; }
@@ -459,21 +470,23 @@ public:
 		return output;
 	}
 
-	void setError(T* target)
+	void setError(T* target, functionType type)
 	{
 		for (int i = 0; i < neurons; i++)
 		{
-			error[i] = (target[i] - output[i]) * sigDerivative<T>(sum<T>(input, lenInput) + arr[i]->getBias());					///////////////////
+			error[i] = (target[i] - output[i]) * derivative<T>(type, sum<T>(input, lenInput) + arr[i]->getBias());
 		}
 	}
 
-	void setError(T* errors, AdjMatrix<T>* matrix)
+	void setError(T* errors, AdjMatrix<T>* matrix, functionType type)
 	{
 		for (int i = 0; i < neurons; i++)
 		{
-			error[i] = weighedSum(errors, matrix->getStrWeights(i), neurons) * sigDerivative<T>(sum<T>(input, lenInput) + arr[i]->getBias());		  /////////////////
+			error[i] = weighedSum(errors, matrix->getStrWeights(i), arr[i]->getNextNum()) * derivative<T>(type, sum<T>(input, lenInput) + arr[i]->getBias());		  /////////////////
 		}
 	}
+
+	void setNeurons(int _neurons) { neurons = _neurons; }
 
 	T* getInput() { return input; }
 
@@ -513,10 +526,10 @@ class NeuralNet
 	{
 		if (type == sigmoid || type == softpls)
 		{
-			arrLayers[layers - 1]->setError(target);
+			arrLayers[layers - 1]->setError(target, type);
 			for (int i = layers - 2; i > 0; i--)
 			{
-				arrLayers[i]->setError(arrLayers[i + 1]->getError(), arrMatrixes[i]);
+				arrLayers[i]->setError(arrLayers[i + 1]->getError(), arrMatrixes[i], type);
 			}
 
 			for (int i = 0; i < matrixes; i++)
@@ -528,7 +541,7 @@ class NeuralNet
 			{
 				for (int j = 0; j < arrLayers[i]->getNeuronsNum(); j++)
 				{
-					arrLayers[i]->getNeurons()[j]->setBias(arrLayers[i]->getError(j), speed);
+					arrLayers[i]->getNeurons()[j]->addBias(arrLayers[i]->getError(j), speed);
 				}
 			}
 		}
@@ -571,7 +584,7 @@ class NeuralNet
 		else
 		{
 			file << output[0] << ";";
-			file << target[0] << ";\n";	 
+			file << target[0] << ";\n";
 		}
 	}
 
@@ -647,12 +660,6 @@ public:
 		{
 			arrMatrixes[i] = new AdjMatrix<T>(neurons[i + 1], neurons[i], weights[i], arrLayers[i]->getNeurons(), arrLayers[i + 1]->getNeurons());
 		}
-
-		for (int i = 0; i < matrixes; i++){ delete weights[i]; }
-		delete[] weights;
-		for (int i = 0; i < layers; i++) { delete biases[i]; }
-		delete[] biases;
-		delete[] neurons;
 	}
 
 	void dataProcess(std::ifstream& set, int numOfIterations)
@@ -767,7 +774,13 @@ public:
 
 void main()
 {
-	int numEpoch = 12000;
+	//std::ifstream in("testConfig.txt");
+	//std::ofstream out("currentConfig.txt");
+	//setRandomWeights<float>(in, out, 228);
+	//in.close();
+	//out.close();
+
+	int numEpoch = 5000;
 	int numIter = 4;
 	for (int i = 0; i < numEpoch; i++)
 	{
