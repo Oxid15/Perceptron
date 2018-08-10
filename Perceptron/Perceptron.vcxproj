@@ -120,6 +120,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="effLog.csv" />
+    <None Include="excelLog.csv" />
     <None Include="trainLog.csv" />
     <None Include="simpleTrain.csv" />
     <None Include="weightLog.csv" />

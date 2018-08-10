@@ -18,8 +18,10 @@ T randomWeight(int seed)
 }
 
 template<typename T>
-void setRandomWeights(std::ifstream& inFile, std::ofstream& outFile, int seed)
+void setRandomWeights(std::string inFileName, std::string outFileName, int seed)
 {
+	std::ifstream inFile(inFileName);
+	std::ofstream outFile(outFileName);
 	int layers;
 	inFile >> layers;
 
@@ -137,8 +139,9 @@ T weighedSum(T* in, T* weights, int n)
 }
 
 template<typename T>
-T getEffiency(std::ifstream& file, int output_length, int numberOfPairs)
+T getEffiency(std::string fileName, int output_length, int numberOfPairs)
 {
+	std::ifstream file(fileName);
 	T all = 0;
 	T correct = 0;
 	T eff;
@@ -180,11 +183,11 @@ T getEffiency(std::ifstream& file, int output_length, int numberOfPairs)
 	return eff = correct / all;
 }
 
-void clearFiles(std::string* name, int number)
+void clearFiles(std::string* names, int number)
 {
 	for (int i = 0; i < number; i++)
 	{
-		std::ofstream file(name[i]);
+		std::ofstream file(names[i]);
 		file << '\b';
 	}
 }
@@ -478,7 +481,7 @@ class NeuralNet
 		if (type == sigmoid || type == softpls)
 		{
 			arrLayers[layers - 1]->setError(target, type);
-			for (int i = layers - 2; i > 0; i--)
+			for (int i = layers - 2; i >= 0; i--)
 			{
 				arrLayers[i]->setError(arrLayers[i + 1]->getError(), arrMatrixes[i], type);
 			}
@@ -540,8 +543,9 @@ class NeuralNet
 	}
 
 public:
-	NeuralNet(std::ifstream& configFile)
+	NeuralNet(std::string fileName)
 	{
+		std::ifstream configFile(fileName);
 		configFile >> layers;
 		matrixes = layers - 1;
 
@@ -613,8 +617,9 @@ public:
 		}
 	}
 
-	void dataProcess(std::ifstream& set, int numOfIterations)
+	void dataProcess(std::string fileName, int numOfIterations)
 	{
+		std::ifstream set(fileName);
 		std::ofstream log("testLog.csv");
 		for (int i = 0; i < numOfIterations; i++)
 		{
@@ -632,8 +637,10 @@ public:
 		}
 	}
 
-	void train(std::ifstream& trainSet, int numOfIterations, T speed)
+	void train(std::string fileName, int numOfIterations, T speed)
 	{
+		std::ifstream trainSet(fileName);
+		std::ofstream exLog("excelLog.csv", std::ios::app);
 		for (int i = 0; i < numOfIterations; i++)
 		{
 			int out_len = arrLayers[layers - 1]->getNeuronsNum();
@@ -650,11 +657,25 @@ public:
 
 			std::ofstream log("trainLog.csv", std::ios::app);
 			writeLog(net_out, target_out, log);
+
+			
+			int len = arrLayers[layers - 1]->getNeuronsNum();
+			if (len != 1)
+			{
+				// complex output
+			}
+			else
+			{
+				exLog << net_out[0] << ";";
+			}
+
 		}
+		exLog << "\n";
 	}
 
-	void fileOutput(std::ofstream& file)
+	void fileOutput(std::string fileName)
 	{
+		std::ofstream file(fileName);
 		file << layers << "\n";
 
 		switch (type)
@@ -705,8 +726,10 @@ public:
 		}
 	}
 
-	void weightsOutput(std::ofstream& file)
+	void weightsOutput(std::string fileName)
 	{
+		std::ofstream file(fileName, std::ios::app);
+
 		for (int i = 1; i < layers; i++)
 		{
 			for (int j = 0; j < arrLayers[i]->getNeuronsNum(); j++)
@@ -725,50 +748,34 @@ public:
 
 void main()
 {
-	//int num = 4;
-	//for (int k = 0; k < num; k++)
-	//{
-	//	std::ifstream in("testConfig.txt");
-	//	std::ofstream out("currentConfig.txt");
-	//	setRandomWeights<float>(in, out, k + num*3);
-	//	in.close();
-	//	out.close();
+	std::string logs[5] = { "testLog.csv", "effLog.csv","trainLog.csv","weightLog.csv","excelLog.csv" };
+	clearFiles(logs,5);
 
-		int numEpoch = 10000;
+	int num = 1;
+	for (int k = 0; k < num; k++)
+	{
+		//setRandomWeights<double>("testConfig.txt", "currentConfig.txt", k);
+
+		int numEpoch = 1;
 		int numIter = 4;
 		for (int i = 0; i < numEpoch; i++)
 		{
-			std::ifstream config("currentConfig.txt");
-			NeuralNet<float>n(config);
-			config.close();
+			NeuralNet<double>n("currentConfig.txt");
 
-			std::ifstream set("simpleTest.csv");
-			n.train(set, numIter, 0.001);
-			set.close();
+			//n.train("simpleTrain.csv", numIter, 0.0001);
 
-			std::ifstream test("simpleTest.csv");
-			n.dataProcess(test, numIter);
-			test.close();
+			n.dataProcess("simpleTest.csv", numIter);
 
-			std::ifstream testLog("testLog.csv");
 			std::ofstream effLog("effLog.csv", std::ios::app);
-			float eff = getEffiency<float>(testLog, 1, numIter);
+			double eff = getEffiency<double>("testLog.csv", 1, numIter);
 			effLog << eff << ";\n";
-			testLog.close();
 			effLog.close();
 
-			std::ofstream output("currentConfig.txt");
-			n.fileOutput(output);
-			output.close();
-
-			std::ofstream weightLog("weightLog.csv", std::ios::app);
-			n.weightsOutput(weightLog);
-			weightLog.close();
+			n.fileOutput("currentConfig.txt");
+			n.weightsOutput("weightLog.csv");
 
 			if (eff == 1)
 				return;
 		}
-	//}
-	//std::string logs[3] = { "testLog.csv", "effLog.csv","trainLog.csv" };
-	//clearFiles(logs,3);
+	}
 }
