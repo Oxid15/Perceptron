@@ -11,7 +11,7 @@ T randomWeight(int seed)
 {
 	T weight;
 	srand(seed);
-	weight = 0.1*(rand() % 100);
+	weight = (rand() % 20);
 	if (seed % 2)
 		weight = weight - 2 * weight;
 	return weight;
@@ -250,7 +250,7 @@ public:
 		return out;
 	}
 
-	void addBias(T error, T speed) { bias += speed * error; }
+	void addToBias(T error, T speed) { bias += speed * error; }
 
 	void setBias(T _bias) { bias = _bias; }
 
@@ -436,7 +436,8 @@ public:
 	{
 		for (int i = 0; i < neurons; i++)
 		{
-			error[i] = weighedSum(errors, matrix->getStrWeights(i), arr[i]->getNextNum()) * derivative<T>(type, sum<T>(input, lenInput) + arr[i]->getBias());		  /////////////////
+			error[i] = weighedSum(errors, matrix->getStrWeights(i), arr[i]->getNextNum()) * 
+				derivative<T>(type, sum<T>(input, lenInput) + arr[i]->getBias());		  
 		}
 	}
 
@@ -495,7 +496,7 @@ class NeuralNet
 			{
 				for (int j = 0; j < arrLayers[i]->getNeuronsNum(); j++)
 				{
-					arrLayers[i]->getNeurons()[j]->addBias(arrLayers[i]->getError(j), speed);
+					arrLayers[i]->getNeurons()[j]->addToBias(arrLayers[i]->getError(j), speed);
 				}
 			}
 		}
@@ -754,15 +755,15 @@ void main()
 	int num = 1;
 	for (int k = 0; k < num; k++)
 	{
-		//setRandomWeights<double>("testConfig.txt", "currentConfig.txt", k);
+		setRandomWeights<double>("testConfig.txt", "currentConfig.txt", k*k+k);
 
-		int numEpoch = 1;
+		int numEpoch = 1000;
 		int numIter = 4;
 		for (int i = 0; i < numEpoch; i++)
 		{
 			NeuralNet<double>n("currentConfig.txt");
 
-			//n.train("simpleTrain.csv", numIter, 0.0001);
+			n.train("simpleTrain.csv", numIter, 1);
 
 			n.dataProcess("simpleTest.csv", numIter);
 
