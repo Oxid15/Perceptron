@@ -255,7 +255,7 @@ public:
 		return out;
 	}
 
-	void addToBias(T error, T speed) { bias += (speed * error); }	  /////////////-
+	void addToBias(T error, T speed) { bias += speed * error; }
 
 	void setBias(T _bias) { bias = _bias; }
 
@@ -317,7 +317,7 @@ public:
 		{
 			for (int j = 0; j < length; j++)
 			{
-				dWeights[j][i] = (speed * layerInput[i] * layerError[j]);	   //////////////////-
+				dWeights[j][i] = (speed * layerInput[i] * layerError[j]);
 			}
 		}
 
@@ -666,7 +666,7 @@ public:
 			std::ofstream log("trainLog.csv", std::ios::app);
 			writeLog(net_out, target_out, log);
 
-			
+
 			int len = arrLayers[layers - 1]->getNeuronsNum();
 			if (len != 1)
 			{
@@ -757,7 +757,7 @@ public:
 void main()
 {
 	std::string logs[5] = { "testLog.csv", "effLog.csv","trainLog.csv","weightLog.csv","excelLog.csv" };
-	clearFiles(logs,5);
+	clearFiles(logs, 5);
 
 	int num = 5;
 	for (int k = 0; k < num; k++)
@@ -766,7 +766,7 @@ void main()
 
 		int numEpoch = 1000;
 		int numIter = 4;
-		for (int i = 0; i < numEpoch; i++)						  
+		for (int i = 0; i < numEpoch; i++)
 		{
 			NeuralNet<double>n("currentConfig.txt");
 
