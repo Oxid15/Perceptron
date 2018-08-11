@@ -3,22 +3,23 @@
 #include<cstdlib>
 #include<iostream>
 #include<string>
+#include<time.h>
 
 enum functionType { sigmoid, treshold_func, relu, softpls };
 
 template<typename T>
-T randomWeight(int seed)
+T randomWeight(int seed, int range)
 {
 	T weight;
 	srand(seed);
-	weight = (rand() % 20);
+	weight = (rand() % range);
 	if (seed % 2)
 		weight = weight - 2 * weight;
 	return weight;
 }
 
 template<typename T>
-void setRandomWeights(std::string inFileName, std::string outFileName, int seed)
+void setRandomWeights(std::string inFileName, std::string outFileName, int seed, T range)
 {
 	std::ifstream inFile(inFileName);
 	std::ofstream outFile(outFileName);
@@ -51,7 +52,7 @@ void setRandomWeights(std::string inFileName, std::string outFileName, int seed)
 		for (int j = 0; j < neurons[i]; j++)
 		{
 			if (i)
-				outFile << randomWeight<T>(seed) << " ";
+				outFile << randomWeight<T>(seed, range) << " ";
 			else
 				outFile << "0 ";
 			seed++;
@@ -65,7 +66,7 @@ void setRandomWeights(std::string inFileName, std::string outFileName, int seed)
 		{
 			for (int j = 0; j < neurons[k + 1]; j++)
 			{
-				outFile << randomWeight<T>(seed) << " ";
+				outFile << randomWeight<T>(seed, range) << " ";
 				seed++;
 			}
 		}
@@ -77,7 +78,7 @@ template<typename T>
 T sig(T num) { return 1 / (1 + exp(-num)); }
 
 template<typename T>
-T sigDerivative(T num) { return sig<T>((num)*(1 - sig<T>(num))); }
+T sigDerivative(T num) { return sig<T>((num ) * (1 - sig<T>(num))); }
 
 template<typename T>
 T treshold_function(T num)
@@ -366,6 +367,8 @@ public:
 	int getHeight() { return height; }
 };
 
+enum neuronType {input, output, hidden};	//may be the member of BaseNeuron, but...
+
 template<typename T>
 class Layer
 {
@@ -424,20 +427,23 @@ public:
 		return output;
 	}
 
-	void setError(T* target, functionType type)
+	void setError(T* array, AdjMatrix<T>* matrix, functionType funcType, neuronType neuronType)
 	{
-		for (int i = 0; i < neurons; i++)
+		if (neuronType == neuronType::output)  //array means target values
 		{
-			error[i] = (target[i] - output[i]) * derivative<T>(type, sum<T>(input, lenInput) + arr[i]->getBias());
+			for (int i = 0; i < neurons; i++)
+			{
+				error[i] = (array[i] - output[i]) *
+					derivative<T>(funcType, weighedSum<T>(input, matrix->getColWeights(i), lenInput) + arr[i]->getBias());
+			}
 		}
-	}
-
-	void setError(T* errors, AdjMatrix<T>* matrix, functionType type)
-	{
-		for (int i = 0; i < neurons; i++)
+		else                                  //array means input errors
 		{
-			error[i] = weighedSum(errors, matrix->getStrWeights(i), arr[i]->getNextNum()) * 
-				derivative<T>(type, sum<T>(input, lenInput) + arr[i]->getBias());		  
+			for (int i = 0; i < neurons; i++)
+			{
+				error[i] = weighedSum(array, matrix->getStrWeights(i), arr[i]->getNextNum()) *
+					derivative<T>(funcType, sum<T>(input, lenInput) + arr[i]->getBias());
+			}
 		}
 	}
 
@@ -481,10 +487,10 @@ class NeuralNet
 	{
 		if (type == sigmoid || type == softpls)
 		{
-			arrLayers[layers - 1]->setError(target, type);
+			arrLayers[layers - 1]->setError(target, arrMatrixes[layers - 2], type, neuronType::output);
 			for (int i = layers - 2; i >= 0; i--)
 			{
-				arrLayers[i]->setError(arrLayers[i + 1]->getError(), arrMatrixes[i], type);
+				arrLayers[i]->setError(arrLayers[i + 1]->getError(), arrMatrixes[i], type, neuronType::hidden);
 			}
 
 			for (int i = 0; i < matrixes; i++)
@@ -749,21 +755,21 @@ public:
 
 void main()
 {
-	std::string logs[5] = { "testLog.csv", "effLog.csv","trainLog.csv","weightLog.csv","excelLog.csv" };
-	clearFiles(logs,5);
+	//std::string logs[5] = { "testLog.csv", "effLog.csv","trainLog.csv","weightLog.csv","excelLog.csv" };
+	//clearFiles(logs,5);
 
-	int num = 1;
+	int num = 10;
 	for (int k = 0; k < num; k++)
 	{
-		setRandomWeights<double>("testConfig.txt", "currentConfig.txt", k*k+k);
+		//setRandomWeights<double>("testConfig.txt", "currentConfig.txt", time(NULL), 3);
 
-		int numEpoch = 1000;
+		int numEpoch = 500;
 		int numIter = 4;
 		for (int i = 0; i < numEpoch; i++)
 		{
 			NeuralNet<double>n("currentConfig.txt");
 
-			n.train("simpleTrain.csv", numIter, 1);
+			n.train("simpleTrain.csv", numIter, 0.1);
 
 			n.dataProcess("simpleTest.csv", numIter);
 
