@@ -78,7 +78,11 @@ template<typename T>
 T sig(T num) { return 1 / (1 + exp(-num)); }
 
 template<typename T>
-T sigDerivative(T num) { return sig<T>((num ) * (1 - sig<T>(num))); }
+T sigDerivative(T num)
+{
+	T ex = exp(-num);
+	return ex / ((1 + ex)*(1 + ex));
+}
 
 template<typename T>
 T treshold_function(T num)
@@ -251,7 +255,7 @@ public:
 		return out;
 	}
 
-	void addToBias(T error, T speed) { bias += speed * error; }
+	void addToBias(T error, T speed) { bias += (speed * error); }	  /////////////-
 
 	void setBias(T _bias) { bias = _bias; }
 
@@ -313,7 +317,7 @@ public:
 		{
 			for (int j = 0; j < length; j++)
 			{
-				dWeights[j][i] = speed * layerInput[i] * layerError[j];
+				dWeights[j][i] = (speed * layerInput[i] * layerError[j]);	   //////////////////-
 			}
 		}
 
@@ -366,8 +370,6 @@ public:
 	int getLength() { return length; }
 	int getHeight() { return height; }
 };
-
-enum neuronType {input, output, hidden};	//may be the member of BaseNeuron, but...
 
 template<typename T>
 class Layer
@@ -427,23 +429,22 @@ public:
 		return output;
 	}
 
-	void setError(T* array, AdjMatrix<T>* matrix, functionType funcType, neuronType neuronType)
+	void setError(T* target, AdjMatrix<T>* matrix, functionType funcType)
 	{
-		if (neuronType == neuronType::output)  //array means target values
+		for (int i = 0; i < neurons; i++)
 		{
-			for (int i = 0; i < neurons; i++)
-			{
-				error[i] = (array[i] - output[i]) *
-					derivative<T>(funcType, weighedSum<T>(input, matrix->getColWeights(i), lenInput) + arr[i]->getBias());
-			}
+			error[i] = (target[i] - output[i]) *
+				derivative<T>(funcType, weighedSum<T>(input, matrix->getColWeights(i), lenInput) + arr[i]->getBias());
 		}
-		else                                  //array means input errors
+
+	}
+
+	void setError(T* errors, AdjMatrix<T>* thisMatrix, AdjMatrix<T>* prevMatrix, functionType funcType)
+	{
+		for (int i = 0; i < neurons; i++)
 		{
-			for (int i = 0; i < neurons; i++)
-			{
-				error[i] = weighedSum(array, matrix->getStrWeights(i), arr[i]->getNextNum()) *
-					derivative<T>(funcType, sum<T>(input, lenInput) + arr[i]->getBias());
-			}
+			error[i] = (weighedSum(errors, thisMatrix->getStrWeights(i), arr[i]->getNextNum())) *
+				(derivative<T>(funcType, weighedSum<T>(input, prevMatrix->getColWeights(i), lenInput) + arr[i]->getBias()));
 		}
 	}
 
@@ -487,10 +488,10 @@ class NeuralNet
 	{
 		if (type == sigmoid || type == softpls)
 		{
-			arrLayers[layers - 1]->setError(target, arrMatrixes[layers - 2], type, neuronType::output);
-			for (int i = layers - 2; i >= 0; i--)
+			arrLayers[layers - 1]->setError(target, arrMatrixes[layers - 2], type);
+			for (int i = layers - 2; i > 0; i--)
 			{
-				arrLayers[i]->setError(arrLayers[i + 1]->getError(), arrMatrixes[i], type, neuronType::hidden);
+				arrLayers[i]->setError(arrLayers[i + 1]->getError(), arrMatrixes[i], arrMatrixes[i - 1], type);
 			}
 
 			for (int i = 0; i < matrixes; i++)
@@ -755,21 +756,21 @@ public:
 
 void main()
 {
-	//std::string logs[5] = { "testLog.csv", "effLog.csv","trainLog.csv","weightLog.csv","excelLog.csv" };
-	//clearFiles(logs,5);
+	std::string logs[5] = { "testLog.csv", "effLog.csv","trainLog.csv","weightLog.csv","excelLog.csv" };
+	clearFiles(logs,5);
 
-	int num = 10;
+	int num = 5;
 	for (int k = 0; k < num; k++)
 	{
-		//setRandomWeights<double>("testConfig.txt", "currentConfig.txt", time(NULL), 3);
+		setRandomWeights<double>("testConfig.txt", "currentConfig.txt", time(NULL), 3);
 
-		int numEpoch = 500;
+		int numEpoch = 1000;
 		int numIter = 4;
-		for (int i = 0; i < numEpoch; i++)
+		for (int i = 0; i < numEpoch; i++)						  
 		{
 			NeuralNet<double>n("currentConfig.txt");
 
-			n.train("simpleTrain.csv", numIter, 0.1);
+			n.train("simpleTrain.csv", numIter, 1);
 
 			n.dataProcess("simpleTest.csv", numIter);
 
