@@ -74,6 +74,15 @@ void setRandomWeights(std::string inFileName, std::string outFileName, int seed,
 	}
 }
 
+void clearFiles(std::string* names, int number)
+{
+	for (int i = 0; i < number; i++)
+	{
+		std::ofstream file(names[i]);
+		file << '\b';
+	}
+}
+
 template<typename T>
 T sig(T num) { return 1 / (1 + exp(-num)); }
 
@@ -186,15 +195,6 @@ T getEffiency(std::string fileName, int output_length, int numberOfPairs)
 		}
 	}
 	return eff = correct / all;
-}
-
-void clearFiles(std::string* names, int number)
-{
-	for (int i = 0; i < number; i++)
-	{
-		std::ofstream file(names[i]);
-		file << '\b';
-	}
 }
 
 template<typename T>
@@ -625,11 +625,11 @@ public:
 		}
 	}
 
-	void dataProcess(std::string fileName, int numOfIterations)
+	void dataProcess(std::string fileName, int size)
 	{
 		std::ifstream set(fileName);
 		std::ofstream log("testLog.csv");
-		for (int i = 0; i < numOfIterations; i++)
+		for (int i = 0; i < size; i++)
 		{
 			int out_len = arrLayers[layers - 1]->getNeuronsNum();
 			T* net_out = new T[out_len];
@@ -645,11 +645,11 @@ public:
 		}
 	}
 
-	void train(std::string fileName, int numOfIterations, T speed)
+	void train(std::string fileName, int size, T speed)
 	{
 		std::ifstream trainSet(fileName);
 		std::ofstream exLog("excelLog.csv", std::ios::app);
-		for (int i = 0; i < numOfIterations; i++)
+		for (int i = 0; i < size; i++)
 		{
 			int out_len = arrLayers[layers - 1]->getNeuronsNum();
 			T* net_out = new T[out_len];
@@ -754,36 +754,30 @@ public:
 	}
 };
 
-void main()
+int main()
 {
 	std::string logs[5] = { "testLog.csv", "effLog.csv","trainLog.csv","weightLog.csv","excelLog.csv" };
 	clearFiles(logs, 5);
 
-	int num = 5;
-	for (int k = 0; k < num; k++)
+	setRandomWeights<double>("testConfig.txt", "currentConfig.txt", time(NULL), 3);
+
+	int numEpoch = 1000;
+	int fileSize = 4;
+	for (int i = 0; i < numEpoch; i++)
 	{
-		setRandomWeights<double>("testConfig.txt", "currentConfig.txt", time(NULL), 3);
+		NeuralNet<double>n("currentConfig.txt");
 
-		int numEpoch = 1000;
-		int numIter = 4;
-		for (int i = 0; i < numEpoch; i++)
-		{
-			NeuralNet<double>n("currentConfig.txt");
+		n.train("simpleTrain.csv", fileSize, 1);
 
-			n.train("simpleTrain.csv", numIter, 1);
+		n.dataProcess("simpleTest.csv", fileSize);
 
-			n.dataProcess("simpleTest.csv", numIter);
+		std::ofstream effLog("effLog.csv", std::ios::app);
+		double eff = getEffiency<double>("testLog.csv", 1, fileSize);
+		effLog << eff << ";\n";
+		effLog.close();
 
-			std::ofstream effLog("effLog.csv", std::ios::app);
-			double eff = getEffiency<double>("testLog.csv", 1, numIter);
-			effLog << eff << ";\n";
-			effLog.close();
-
-			n.fileOutput("currentConfig.txt");
-			n.weightsOutput("weightLog.csv");
-
-			if (eff == 1)
-				return;
-		}
+		n.fileOutput("currentConfig.txt");
+		n.weightsOutput("weightLog.csv");
 	}
+	return 0;
 }
