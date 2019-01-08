@@ -18,62 +18,6 @@ T randomWeight(int seed, int range)
 	return weight;
 }
 
-template<typename T>
-void setRandomWeights(std::string inFileName, std::string outFileName, int seed, T range)
-{
-	std::ifstream inFile(inFileName);
-	std::ofstream outFile(outFileName);
-	int layers;
-	inFile >> layers;
-
-	int type;
-	inFile >> type;
-
-	int* neurons = new int[layers];
-	for (int i = 0; i < layers; i++)
-	{
-		inFile >> neurons[i];
-	}
-
-	outFile << layers << "\n";
-
-	outFile << type << "\n";
-
-	for (int i = 0; i < layers; i++)
-	{
-		outFile << neurons[i];
-		if (i != layers - 1)
-			outFile << " ";
-	}
-	outFile << "\n";
-
-	for (int i = 0; i < layers; i++)
-	{
-		for (int j = 0; j < neurons[i]; j++)
-		{
-			if (i)
-				outFile << randomWeight<T>(seed, range) << " ";
-			else
-				outFile << "0 ";
-			seed++;
-		}
-		outFile << "\n";
-	}
-
-	for (int k = 0; k < layers - 1; k++)
-	{
-		for (int i = 0; i < neurons[k]; i++)
-		{
-			for (int j = 0; j < neurons[k + 1]; j++)
-			{
-				outFile << randomWeight<T>(seed, range) << " ";
-				seed++;
-			}
-		}
-		outFile << "\n";
-	}
-}
-
 void clearFiles(std::string* names, int number)
 {
 	for (int i = 0; i < number; i++)
@@ -153,7 +97,7 @@ T weighedSum(T* in, T* weights, int n)
 }
 
 template<typename T>
-T getEffiency(std::string fileName, int output_length, int numberOfPairs)
+T getEffiency(std::string fileName, int output_length, int numberOfPairs)		   //?
 {
 	std::ifstream file(fileName);
 	T all = 0;
@@ -274,6 +218,33 @@ class AdjMatrix
 	T** arr;
 	int length;
 	int height;
+
+	void setWeights(T* layerError, T* layerInput, T speed)
+	{
+		T** dWeights = new T*[length];
+		for (int i = 0; i < length; i++)
+		{
+			dWeights[i] = new T[height];
+		}
+
+		for (int i = 0; i < height; i++)
+		{
+			for (int j = 0; j < length; j++)
+			{
+				dWeights[j][i] = (speed * layerInput[i] * layerError[j]);
+			}
+		}
+
+		for (int i = 0; i < height; i++)
+		{
+			for (int j = 0; j < length; j++)
+			{
+				arr[j][i] += dWeights[j][i];
+			}
+		}
+
+	}
+
 public:
 	AdjMatrix(int _length, int _height, T* weights)
 	{
@@ -305,32 +276,6 @@ public:
 		delete[] arr;
 	}
 
-	void setWeights(T* layerError, T* layerInput, T speed)
-	{
-		T** dWeights = new T*[length];
-		for (int i = 0; i < length; i++)
-		{
-			dWeights[i] = new T[height];
-		}
-
-		for (int i = 0; i < height; i++)
-		{
-			for (int j = 0; j < length; j++)
-			{
-				dWeights[j][i] = (speed * layerInput[i] * layerError[j]);
-			}
-		}
-
-		for (int i = 0; i < height; i++)
-		{
-			for (int j = 0; j < length; j++)
-			{
-				arr[j][i] += dWeights[j][i];
-			}
-		}
-
-	}
-
 	void fileOutput(std::ofstream& file)
 	{
 		for (int i = 0; i < height; i++)
@@ -360,6 +305,11 @@ public:
 			temp[i] = arr[index][i];
 		}
 		return temp;
+	}
+
+	void setWeight(int i, int j,T weight)
+	{
+		arr[i][j] = weight;
 	}
 
 	T getWeight(int i, int j)
@@ -524,7 +474,7 @@ class NeuralNet
 		return arrLayers[layers - 1]->getOutput();
 	}
 
-	void writeLog(T* output, T* target, std::ofstream& file)
+	void writeLog(T* output, T* target, std::ofstream& file)		  //?
 	{
 		int len = arrLayers[layers - 1]->getNeuronsNum();
 		if (len != 1)
@@ -551,6 +501,7 @@ class NeuralNet
 	}
 
 public:
+
 	NeuralNet(std::string fileName)
 	{
 		std::ifstream configFile(fileName);
@@ -625,7 +576,7 @@ public:
 		}
 	}
 
-	void dataProcess(std::string fileName, int size)
+	void dataProcess(std::string fileName, int size)			//?
 	{
 		std::ifstream set(fileName);
 		std::ofstream log("testLog.csv");
@@ -645,7 +596,7 @@ public:
 		}
 	}
 
-	void train(std::string fileName, int size, T speed)
+	void train(std::string fileName, int size, T speed)				//?
 	{
 		std::ifstream trainSet(fileName);
 		std::ofstream exLog("excelLog.csv", std::ios::app);
@@ -680,6 +631,14 @@ public:
 		}
 		exLog << "\n";
 	}
+
+	AdjMatrix<T>** getMatrixes() { return arrMatrixes; }
+
+	Layer<T>** getLayers() { return arrLayers; }
+
+	int getMatrixesNum() { return matrixes; }
+
+	int getLayersNum() { return layers; }
 
 	void fileOutput(std::string fileName)
 	{
@@ -754,30 +713,122 @@ public:
 	}
 };
 
+template<typename T>
+void setRandomWeights(std::string inFileName, std::string outFileName, int seed, T range)
+{
+	std::ifstream inFile(inFileName);
+	std::ofstream outFile(outFileName);
+	int layers;
+	inFile >> layers;
+
+	int type;
+	inFile >> type;
+
+	int* neurons = new int[layers];
+	for (int i = 0; i < layers; i++)
+	{
+		inFile >> neurons[i];
+	}
+
+	outFile << layers << "\n";
+
+	outFile << type << "\n";
+
+	for (int i = 0; i < layers; i++)
+	{
+		outFile << neurons[i];
+		if (i != layers - 1)
+			outFile << " ";
+	}
+	outFile << "\n";
+
+	for (int i = 0; i < layers; i++)
+	{
+		for (int j = 0; j < neurons[i]; j++)
+		{
+			if (i)
+				outFile << randomWeight<T>(seed, range) << " ";
+			else
+				outFile << "0 ";
+			seed++;
+		}
+		outFile << "\n";
+	}
+
+	for (int k = 0; k < layers - 1; k++)
+	{
+		for (int i = 0; i < neurons[k]; i++)
+		{
+			for (int j = 0; j < neurons[k + 1]; j++)
+			{
+				outFile << randomWeight<T>(seed, range) << " ";
+				seed++;
+			}
+		}
+		outFile << "\n";
+	}
+}
+
+template<typename T>
+void setRandomWeights(NeuralNet<T>& net, int seed, T range)
+{
+	int layers = net.getLayersNum();
+	for (int i = 0; i < layers; i++)
+	{
+		int neurons = net.getLayers()[i]->getNeuronsNum();
+		for (int j = 0; j < neurons; j++)
+		{
+			if (i)
+				net.getLayers()[i]->getNeurons()[j]->setBias(randomWeight<T>(seed, range));
+			else
+				net.getLayers()[i]->getNeurons()[j]->setBias(0);
+		}
+	}
+
+	int matrixes = net.getMatrixesNum();
+	for (int k = 0; k < matrixes; k++)
+	{
+		int length = net.getMatrixes()[k]->getLength();
+		int height = net.getMatrixes()[k]->getHeight();
+		for (int i = 0; i < length; i++)
+		{
+			for (int j = 0; j < height; j++)
+			{
+				net.getMatrixes()[k]->setWeight(i, j, randomWeight<T>(seed, range) );
+				seed++;
+			}
+		}
+	}
+}
+
 int main()
 {
-	std::string logs[5] = { "testLog.csv", "effLog.csv","trainLog.csv","weightLog.csv","excelLog.csv" };
-	clearFiles(logs, 5);
+	//std::string logs[5] = { "testLog.csv", "effLog.csv","trainLog.csv","weightLog.csv","excelLog.csv" };
+	//clearFiles(logs, 5);
 
-	setRandomWeights<double>("testConfig.txt", "currentConfig.txt", time(NULL), 3);
+	//setRandomWeights<double>("testConfig.txt", "currentConfig.txt", time(NULL), 3);
 
-	int numEpoch = 1000;
-	int fileSize = 4;
-	for (int i = 0; i < numEpoch; i++)
-	{
-		NeuralNet<double>n("currentConfig.txt");
+	//int numEpoch = 1000;											//?
+	//int fileSize = 4;
+	//for (int i = 0; i < numEpoch; i++)
+	//{
+	//	NeuralNet<double>n("currentConfig.txt");
 
-		n.train("simpleTrain.csv", fileSize, 1);
+	//	n.train("simpleTrain.csv", fileSize, 1);
 
-		n.dataProcess("simpleTest.csv", fileSize);
+	//	n.dataProcess("simpleTest.csv", fileSize);
 
-		std::ofstream effLog("effLog.csv", std::ios::app);
-		double eff = getEffiency<double>("testLog.csv", 1, fileSize);
-		effLog << eff << ";\n";
-		effLog.close();
+	//	std::ofstream effLog("effLog.csv", std::ios::app);
+	//	double eff = getEffiency<double>("testLog.csv", 1, fileSize);
+	//	effLog << eff << ";\n";
+	//	effLog.close();
 
-		n.fileOutput("currentConfig.txt");
-		n.weightsOutput("weightLog.csv");
-	}
+	//	n.fileOutput("currentConfig.txt");
+	//	n.weightsOutput("weightLog.csv");
+	//}
+
+	//NeuralNet<float> net("testConfig.txt");
+	//setRandomWeights<float>(net,time(NULL),5);
+	//net.fileOutput("currentConfig.txt");
 	return 0;
 }
