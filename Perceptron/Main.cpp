@@ -5,16 +5,16 @@
 #include<string>
 #include<time.h>
 
-enum functionType { sigmoid, treshold_func, relu, softpls };
+enum functionType { sigmoid, softpls };
 
 template<typename T>
 T randomWeight(int seed, int range)
 {
 	T weight;
 	srand(seed);
-	weight = (rand() % range);
+	weight = (rand() % range + rand()*0.00001);
 	if (seed % 2)
-		weight = weight - 2 * weight;
+		weight = -weight;
 	return weight;
 }
 
@@ -35,24 +35,6 @@ T sigDerivative(T num)
 {
 	T ex = exp(-num);
 	return ex / ((1 + ex)*(1 + ex));
-}
-
-template<typename T>
-T treshold_function(T num)
-{
-	if (num >= 0)
-		return 1;
-	else
-		return 0;
-}
-
-template<typename T>
-T ReLU(T num)
-{
-	if (num >= 0)
-		return num;
-	else
-		return 0;
 }
 
 template<typename T>
@@ -97,13 +79,13 @@ T weighedSum(T* in, T* weights, int n)
 }
 
 template<typename T>
-T getEffiency(std::string fileName, int output_length, int numberOfPairs)		   //?
+T getAccuracyFromFile(std::string fileName, int output_length, int size)
 {
 	std::ifstream file(fileName);
 	T all = 0;
 	T correct = 0;
 	T eff;
-	for (int p = 0; p < numberOfPairs; p++)
+	for (int p = 0; p < size; p++)
 	{
 		for (int k = 0; k < output_length; k++)
 		{
@@ -157,10 +139,6 @@ class BaseNeuron
 		{
 		case sigmoid:
 			return sig(num);
-		case treshold_func:
-			return treshold_function(num);
-		case relu:
-			return ReLU(num);
 		case softpls:
 			return softplus(num);
 		}
@@ -335,10 +313,9 @@ public:
 	{
 		neurons = _neuronsNum;
 		arr = new BaseNeuron<T>*[neurons];
-		for (int i = 0; i < neurons; i++)
-		{
+
+		for (int i = 0; i < neurons; i++) 
 			arr[i] = new BaseNeuron<T>(prevNum, nextNum, biases[i]);
-		}
 
 		lenInput = prevNum;
 
@@ -436,30 +413,23 @@ class NeuralNet
 
 	void backpropagation(T* target, T speed)
 	{
-		if (type == sigmoid || type == softpls)
+		arrLayers[layers - 1]->setError(target, arrMatrixes[layers - 2], type);
+		for (int i = layers - 2; i > 0; i--)
 		{
-			arrLayers[layers - 1]->setError(target, arrMatrixes[layers - 2], type);
-			for (int i = layers - 2; i > 0; i--)
-			{
-				arrLayers[i]->setError(arrLayers[i + 1]->getError(), arrMatrixes[i], arrMatrixes[i - 1], type);
-			}
-
-			for (int i = 0; i < matrixes; i++)
-			{
-				arrMatrixes[i]->setWeights(arrLayers[i + 1]->getError(), arrLayers[i + 1]->getInput(), speed);
-			}
-
-			for (int i = 1; i < layers; i++)
-			{
-				for (int j = 0; j < arrLayers[i]->getNeuronsNum(); j++)
-				{
-					arrLayers[i]->getNeurons()[j]->addToBias(arrLayers[i]->getError(j), speed);
-				}
-			}
+			arrLayers[i]->setError(arrLayers[i + 1]->getError(), arrMatrixes[i], arrMatrixes[i - 1], type);
 		}
-		else
+
+		for (int i = 0; i < matrixes; i++)
 		{
-			// delta-rule if layers == 2
+			arrMatrixes[i]->setWeights(arrLayers[i + 1]->getError(), arrLayers[i + 1]->getInput(), speed);
+		}
+
+		for (int i = 1; i < layers; i++)
+		{
+			for (int j = 0; j < arrLayers[i]->getNeuronsNum(); j++)
+			{
+				arrLayers[i]->getNeurons()[j]->addToBias(arrLayers[i]->getError(j), speed);
+			}
 		}
 	}
 
@@ -474,7 +444,7 @@ class NeuralNet
 		return arrLayers[layers - 1]->getOutput();
 	}
 
-	void writeLog(T* output, T* target, std::ofstream& file)		  //?
+	void writeLog(T* output, T* target, std::ofstream& file)		  
 	{
 		int len = arrLayers[layers - 1]->getNeuronsNum();
 		if (len != 1)
@@ -519,12 +489,6 @@ public:
 			type = sigmoid;
 			break;
 		case 1:
-			type = treshold_func;
-			break;
-		case 2:
-			type = relu;
-			break;
-		case 3:
 			type = softpls;
 		}
 
@@ -576,7 +540,7 @@ public:
 		}
 	}
 
-	void dataProcess(std::string fileName, int size)			//?
+	T* dataProcess(std::string fileName, int size)			
 	{
 		std::ifstream set(fileName);
 		std::ofstream log("testLog.csv");
@@ -585,51 +549,29 @@ public:
 			int out_len = arrLayers[layers - 1]->getNeuronsNum();
 			T* net_out = new T[out_len];
 			net_out = process(getStrFromFile(set));
-
-			T* target_out = new T[out_len];
-			for (int i = 0; i < out_len; i++)
-			{
-				set >> target_out[i];
-				set.get();
-			}
-			writeLog(net_out, target_out, log);
 		}
 	}
 
-	void train(std::string fileName, int size, T speed)				//?
+	void train(std::string fileName, int size, int epochs, T speed)				
 	{
-		std::ifstream trainSet(fileName);
-		std::ofstream exLog("excelLog.csv", std::ios::app);
-		for (int i = 0; i < size; i++)
+		for (int k = 0; k < epochs; k++)
 		{
-			int out_len = arrLayers[layers - 1]->getNeuronsNum();
-			T* net_out = new T[out_len];
-			net_out = process(getStrFromFile(trainSet));
-
-			T* target_out = new T[out_len];
-			for (int i = 0; i < out_len; i++)
+			std::ifstream trainSet(fileName);
+			for (int i = 0; i < size; i++)
 			{
-				trainSet >> target_out[i];
-				trainSet.get();
+				int out_len = arrLayers[layers - 1]->getNeuronsNum();
+				T* net_out = new T[out_len];
+				net_out = process(getStrFromFile(trainSet));
+
+				T* target_out = new T[out_len];
+				for (int i = 0; i < out_len; i++)
+				{
+					trainSet >> target_out[i];
+					trainSet.get();
+				}
+				backpropagation(target_out, speed);
 			}
-			backpropagation(target_out, speed);
-
-			std::ofstream log("trainLog.csv", std::ios::app);
-			writeLog(net_out, target_out, log);
-
-
-			int len = arrLayers[layers - 1]->getNeuronsNum();
-			if (len != 1)
-			{
-				// complex output
-			}
-			else
-			{
-				exLog << net_out[0] << ";";
-			}
-
 		}
-		exLog << "\n";
 	}
 
 	AdjMatrix<T>** getMatrixes() { return arrMatrixes; }
@@ -649,12 +591,6 @@ public:
 		{
 		case sigmoid:
 			file << "0\n";
-			break;
-		case treshold_func:
-			file << "1\n";
-			break;
-		case relu:
-			file << "2\n";
 			break;
 		case softpls:
 			file << "3\n";
@@ -782,6 +718,7 @@ void setRandomWeights(NeuralNet<T>& net, int seed, T range)
 				net.getLayers()[i]->getNeurons()[j]->setBias(randomWeight<T>(seed, range));
 			else
 				net.getLayers()[i]->getNeurons()[j]->setBias(0);
+			seed++;
 		}
 	}
 
@@ -801,34 +738,7 @@ void setRandomWeights(NeuralNet<T>& net, int seed, T range)
 	}
 }
 
-int main()
+int main()		 
 {
-	//std::string logs[5] = { "testLog.csv", "effLog.csv","trainLog.csv","weightLog.csv","excelLog.csv" };
-	//clearFiles(logs, 5);
-
-	//setRandomWeights<double>("testConfig.txt", "currentConfig.txt", time(NULL), 3);
-
-	//int numEpoch = 1000;											//?
-	//int fileSize = 4;
-	//for (int i = 0; i < numEpoch; i++)
-	//{
-	//	NeuralNet<double>n("currentConfig.txt");
-
-	//	n.train("simpleTrain.csv", fileSize, 1);
-
-	//	n.dataProcess("simpleTest.csv", fileSize);
-
-	//	std::ofstream effLog("effLog.csv", std::ios::app);
-	//	double eff = getEffiency<double>("testLog.csv", 1, fileSize);
-	//	effLog << eff << ";\n";
-	//	effLog.close();
-
-	//	n.fileOutput("currentConfig.txt");
-	//	n.weightsOutput("weightLog.csv");
-	//}
-
-	//NeuralNet<float> net("testConfig.txt");
-	//setRandomWeights<float>(net,time(NULL),5);
-	//net.fileOutput("currentConfig.txt");
 	return 0;
 }
