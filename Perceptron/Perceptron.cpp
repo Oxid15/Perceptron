@@ -146,17 +146,9 @@ class BaseNeuron
 
 public:
 
-	BaseNeuron()
-	{
-		bias = 0;
-		prevNum = 1;
-		nextNum = 1;
-		in = new T[prevNum];
-	}
-
 	~BaseNeuron() { delete in; }
 
-	BaseNeuron(int _prevNum, int _nextNum, T _bias)
+	BaseNeuron(int _prevNum = 1, int _nextNum = 1, T _bias = 0)
 	{
 		bias = _bias;
 		prevNum = _prevNum;
@@ -224,7 +216,7 @@ class AdjMatrix
 	}
 
 public:
-	AdjMatrix(int _length, int _height, T* weights)
+	AdjMatrix(T* weights, int _length = 1, int _height = 1 )
 	{
 		length = _length;
 		height = _height;
@@ -309,7 +301,7 @@ class Layer
 	int neurons;
 	int lenInput;
 public:
-	Layer(int prevNum, int _neuronsNum, int nextNum, T* biases)
+	Layer(T* biases, int prevNum = 1, int _neuronsNum = 1, int nextNum = 1)
 	{
 		neurons = _neuronsNum;
 		arr = new BaseNeuron<T>*[neurons];
@@ -472,14 +464,22 @@ class NeuralNet
 
 public:
 
+	NeuralNet()
+	{
+		layers = 2;
+		matrixes = 1;
+
+		arrLayers = new Layer<T>*[2];
+		arrMatrixes = new AdjMatrix<T>*;
+
+		type = sigmoid;
+	}
+
 	NeuralNet(std::string fileName)
 	{
 		std::ifstream configFile(fileName);
 		configFile >> layers;
 		matrixes = layers - 1;
-
-		arrLayers = new Layer<T>*[layers];
-		arrMatrixes = new AdjMatrix<T>*[matrixes];
 
 		int _type;
 		configFile >> _type;
@@ -508,22 +508,6 @@ public:
 			}
 		}
 
-		for (int i = 0; i < layers; i++)
-		{
-			if (i == 0)
-			{
-				arrLayers[i] = new Layer<T>(1, neurons[i], neurons[i + 1], biases[i]);
-				continue;
-			}
-
-			if (i == layers - 1)
-			{
-				arrLayers[i] = new Layer<T>(neurons[i - 1], neurons[i], 1, biases[i]);
-				continue;
-			}
-			arrLayers[i] = new Layer<T>(neurons[i - 1], neurons[i], neurons[i + 1], biases[i]);
-		}
-
 		T** weights = new T*[matrixes];
 		for (int i = 0; i < matrixes; i++)
 		{
@@ -534,9 +518,37 @@ public:
 			}
 		}
 
+		initialize(layers, matrixes, type, neurons, biases, weights);
+	}
+
+	void initialize(int _layers, int _matrixes, functionType _type, int* neurons, T** biases, T** weights)
+	{
+		layers = _layers;
+		matrixes = _matrixes;
+		type = _type;
+
+		arrLayers = new Layer<T>*[layers];
+		arrMatrixes = new AdjMatrix<T>*[matrixes];
+
+		for (int i = 0; i < layers; i++)
+		{
+			if (i == 0)
+			{
+				arrLayers[i] = new Layer<T>(biases[i], 1, neurons[i], neurons[i + 1]);
+				continue;
+			}
+
+			if (i == layers - 1)
+			{
+				arrLayers[i] = new Layer<T>(biases[i], neurons[i - 1], neurons[i], 1);
+				continue;
+			}
+			arrLayers[i] = new Layer<T>(biases[i], neurons[i - 1], neurons[i], neurons[i + 1]);
+		}
+
 		for (int i = 0; i < matrixes; i++)
 		{
-			arrMatrixes[i] = new AdjMatrix<T>(neurons[i + 1], neurons[i], weights[i]);
+			arrMatrixes[i] = new AdjMatrix<T>(weights[i], neurons[i + 1], neurons[i]);
 		}
 	}
 
