@@ -117,6 +117,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Evolution.cpp" />
+    <ClCompile Include="Main.cpp" />
     <ClCompile Include="Perceptron.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -131,6 +132,9 @@
     <Text Include="testLog.csv" />
     <Text Include="simpleTest.csv" />
     <Text Include="testConfig.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="computing.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
