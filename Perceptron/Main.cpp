@@ -1,8 +1,7 @@
 #include"Evolution.cpp"
 
-int main()
+void main()
 {
-	NeuralNet<float>* n = init<float>(3, 3);
-	n[1].fileOutput("currentConfig.txt");
-	return 0;
+	NeuralNet<double>* n;
+	n = init(2, 1, 42,10, 1.2);
 }

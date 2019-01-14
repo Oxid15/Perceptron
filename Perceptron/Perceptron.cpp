@@ -125,15 +125,6 @@ public:
 		}
 	}
 
-	~AdjMatrix()
-	{
-		for (int i = 0; i < length; i++)
-		{
-			delete arr[i];
-		}
-		delete[] arr;
-	}
-
 	void fileOutput(std::ofstream& file)
 	{
 		for (int i = 0; i < height; i++)
@@ -207,14 +198,7 @@ public:
 		error = new T[neurons];
 
 		for (int i = 0; i < neurons; i++)
-			arr.add(*new Neuron<T>(prevNum, nextNum, biases[i]), i);
-	}
-
-	~Layer()
-	{
-		delete input;
-		delete output;
-		delete error;
+			arr.add(*new Neuron<T>(prevNum, nextNum, biases[i]));
 	}
 
 	T* process(T* _input)

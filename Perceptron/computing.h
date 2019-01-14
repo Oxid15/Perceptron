@@ -77,7 +77,8 @@ class expArray
 		{
 			newArr[i] = arr[i];
 		}
-		size++;
+		arr = newArr;
+		size *= 2;
 	}
 
 public:
@@ -106,16 +107,21 @@ public:
 
 	void add(T& data, int index)
 	{
-		if (cursor == size)
+		if (index == size)
 		{
 			expand();
 			add(data, index);
 			return;
 		}
-		else
+		else if (index < size and index >= 0)
 		{
 			arr[index] = data;
 			cursor++;
+		}
+		else
+		{
+			arr[cursor] = data;
+			cursor ++;
 		}
 	}
 
