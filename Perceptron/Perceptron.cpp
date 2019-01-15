@@ -1,4 +1,7 @@
 #include"computations.h"
+#include"files.h"
+
+enum metrics { accuracy, meanEuclidNorm };
 
 template<typename T>
 class Neuron
@@ -231,7 +234,7 @@ public:
 
 	void add(T weightRange = 1)
 	{
-		
+
 	}
 
 	T* getInput() { return input; }
@@ -242,7 +245,7 @@ public:
 
 	T getError(int index) { return error[index]; }
 
-	Neuron<T>* getNeurons(){ return arr.getArr(); }
+	Neuron<T>* getNeurons() { return arr.getArr(); }
 
 	int getNeuronsNum() { return neurons; }
 };
@@ -256,6 +259,7 @@ class NeuralNet
 	expArray<Layer<T>> arrLayers;
 	expArray<AdjMatrix<T>> arrMatrixes;
 	functionType type;
+	T valEff;
 
 	void backpropagation(T* target, T speed)
 	{
@@ -290,29 +294,52 @@ class NeuralNet
 		return arrLayers[layers - 1]->getOutput();
 	}
 
-	void writeLog(T* output, T* target, std::ofstream& file)
+	T validate(std::string fileName, int size, metrics metric)
 	{
-		int len = arrLayers[layers - 1]->getNeuronsNum();
-		if (len != 1)
-		{
-			file << "\"";
-			for (int i = 0; i < len; i++)
-			{
-				file << output[i] << ",";
-			}
-			file << "\";";
+		std::ifstream file(fileName);
 
-			file << "\"";
-			for (int i = 0; i < len; i++)
-			{
-				file << target[i] << ",";
-			}
-			file << "\";\n";
-		}
-		else
+		int out_len = arrLayers[layers - 1]->getNeuronsNum();
+		T** net_out = new T*[size];
+		for (int i = 0; i < size; i++)
+			net_out[i] = new T[out_len];
+
+		T** target_out = new T*[size];
+		for (int i = 0; i < size; i++)
+			target_out[i] = new T[out_len];
+
+		for (int i = 0; i < size; i++)
 		{
-			file << output[0] << ";";
-			file << target[0] << ";\n";
+			net_out[i] = process(getStrFromFile<T>(trainSet));
+			for (int i = 0; i < out_len; i++)
+			{
+				target_out[i] = getStrFromCsv(trainSet, out_len);
+			}
+
+			switch (metric)
+			{
+			case (metrics::accuracy):
+			{
+				int right = 0;
+				int all = size;
+
+				for (int i = 0; i < size; i++)
+				{
+					if (net_out[i] == target_out[i])
+						right++;
+				}
+				T acc = right / all;
+				return acc;
+			}
+			case (metrics::meanEuclidNorm):
+			{
+				T* distances = new T[size];
+				for (int i = 0; i < size; i++)
+				{
+					distances[i] = euclidNorm<T>(target_out, net_out, out_len);
+				}
+				return mean<T>(distances, size);
+			}
+			}
 		}
 	}
 
@@ -417,7 +444,7 @@ public:
 		return net_out;
 	}
 
-	void fit(std::string fileName, int size, int epochs, T speed)
+	void fit(std::string fileName, int size, int epochs, T speed = 1, metrics metric = metrics::accuracy)
 	{
 		for (int k = 0; k < epochs; k++)
 		{
@@ -434,18 +461,20 @@ public:
 					target_out[i] = getValueFromCsv(trainSet);
 				}
 				backpropagation(target_out, speed);
+
+				validate(fileName, size, metric);
 			}
 		}
 	}
 
 	void addLayer(int neurons, int index = 0, T weightRange = 1)
 	{
-
+		//...
 	}
 
-	void addNeuron(int index,T weightRange = 1)
+	void addNeuron(int index, T weightRange = 1)
 	{
-
+		//...
 	}
 
 	AdjMatrix<T>** getMatrixes() { return arrMatrixes; }

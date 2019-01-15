@@ -116,7 +116,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Evolution.cpp" />
+    <ClCompile Include="Evolution.h" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Perceptron.cpp" />
   </ItemGroup>
@@ -126,6 +126,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="computations.h" />
+    <ClInclude Include="files.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="test.csv" />

@@ -1,5 +1,38 @@
 #include"Perceptron.cpp"
 
+template<typename T>
+void setrandomWeights(NeuralNet<T>& net, int seed, T range)
+{
+	int layers = net.getLayersNum();
+	for (int i = 0; i < layers; i++)
+	{
+		int neurons = net.getLayers()[i]->getNeuronsNum();
+		for (int j = 0; j < neurons; j++)
+		{
+			if (i)
+				net.getLayers()[i]->getNeurons()[j]->setBias(randomNumber<T>(seed, range));
+			else
+				net.getLayers()[i]->getNeurons()[j]->setBias(0);
+			seed++;
+		}
+	}
+
+	int matrixes = net.getMatrixesNum();
+	for (int k = 0; k < matrixes; k++)
+	{
+		int length = net.getMatrixes()[k]->getLength();
+		int height = net.getMatrixes()[k]->getHeight();
+		for (int i = 0; i < length; i++)
+		{
+			for (int j = 0; j < height; j++)
+			{
+				net.getMatrixes()[k]->setWeight(i, j, randomNumber<T>(seed, range));
+				seed++;
+			}
+		}
+	}
+}
+
 template <typename T>
 NeuralNet<T>* init(int inputSize, int outputSize, int seed = 42, int population_size = 10, T weightRange = 1)
 {

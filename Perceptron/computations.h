@@ -1,164 +1,7 @@
-#include<math.h>
-#include<fstream>									  
-#include<cstdlib>
-#include<iostream>
-#include<string>
+#include<math.h>									  
 #include<time.h>
 
 enum functionType { sigmoid, softpls };
-
-template<typename T>
-T getValueFromCsv(std::fstream& file)
-{
-	T* output = new T;
-	file << *output;
-	file.get();
-	return *output;
-}
-
-template<typename T>
-T* getStrFromFile(std::ifstream& trainSet)
-{
-	int size = arrLayers[0]->getNeuronsNum();
-	T* output = new T[size];
-	for (int i = 0; i < size; i++)
-	{
-		output[i] = getValueFromCsv(trainSet);
-	}
-	return output;
-}
-
-template<typename T>
-void setrandomWeights(std::string inFileName, std::string outFileName, int seed, T range)
-{
-	std::ifstream inFile(inFileName);
-	std::ofstream outFile(outFileName);
-	int layers;
-	inFile >> layers;
-
-	int type;
-	inFile >> type;
-
-	int* neurons = new int[layers];
-	for (int i = 0; i < layers; i++)
-	{
-		inFile >> neurons[i];
-	}
-
-	outFile << layers << "\n";
-
-	outFile << type << "\n";
-
-	for (int i = 0; i < layers; i++)
-	{
-		outFile << neurons[i];
-		if (i != layers - 1)
-			outFile << " ";
-	}
-	outFile << "\n";
-
-	for (int i = 0; i < layers; i++)
-	{
-		for (int j = 0; j < neurons[i]; j++)
-		{
-			if (i)
-				outFile << randomNumber<T>(seed, range) << " ";
-			else
-				outFile << "0 ";
-			seed++;
-		}
-		outFile << "\n";
-	}
-
-	for (int k = 0; k < layers - 1; k++)
-	{
-		for (int i = 0; i < neurons[k]; i++)
-		{
-			for (int j = 0; j < neurons[k + 1]; j++)
-			{
-				outFile << randomNumber<T>(seed, range) << " ";
-				seed++;
-			}
-		}
-		outFile << "\n";
-	}
-}
-
-template<typename T>
-T getAccuracyFromFile(std::string fileName, int output_length, int size)
-{
-	std::ifstream file(fileName);
-	T all = 0;
-	T correct = 0;
-	T eff;
-	for (int p = 0; p < size; p++)
-	{
-		for (int k = 0; k < output_length; k++)
-		{
-			T* output = new T[output_length];
-			T* target = new T[output_length];
-			for (int i = 0; i < output_length; i++)
-			{
-				output[i] = getValueFromCsv(file);
-			}
-			for (int i = 0; i < output_length; i++)
-			{
-				output[i] = getValueFromCsv(file);
-			}
-			for (int i = 0; i < output_length; i++)
-			{
-				if ((output[i] > 0 && output[i] < 1) &&
-					(target[i] >= 0 && target[i] <= 1))
-				{
-					if (output[i] >= 0.5)
-						output[i] = 1;
-					else
-						output[i] = 0;
-				}
-
-				if (output[i] == target[i])
-					correct++;
-			}
-			all++;
-			delete output;
-			delete target;
-		}
-	}
-	return eff = correct / all;
-}
-
-template<typename T>
-void setrandomWeights(NeuralNet<T>& net, int seed, T range)
-{
-	int layers = net.getLayersNum();
-	for (int i = 0; i < layers; i++)
-	{
-		int neurons = net.getLayers()[i]->getNeuronsNum();
-		for (int j = 0; j < neurons; j++)
-		{
-			if (i)
-				net.getLayers()[i]->getNeurons()[j]->setBias(randomNumber<T>(seed, range));
-			else
-				net.getLayers()[i]->getNeurons()[j]->setBias(0);
-			seed++;
-		}
-	}
-
-	int matrixes = net.getMatrixesNum();
-	for (int k = 0; k < matrixes; k++)
-	{
-		int length = net.getMatrixes()[k]->getLength();
-		int height = net.getMatrixes()[k]->getHeight();
-		for (int i = 0; i < length; i++)
-		{
-			for (int j = 0; j < height; j++)
-			{
-				net.getMatrixes()[k]->setWeight(i, j, randomNumber<T>(seed, range));
-				seed++;
-			}
-		}
-	}
-}
 
 template<typename T>
 T randomNumber(int seed, int range)
@@ -169,6 +12,17 @@ T randomNumber(int seed, int range)
 	if (seed % 2)
 		weight = -weight;
 	return weight;
+}
+
+template<typename T>
+T euclidNorm(T* vect1, T* vect2, int size)
+{
+	T* arr = new T[size];
+	for (int i = 0; i < size; i++)
+	{
+		arr[i] = (vect1[i] - vect2[i])*(vect1[i] - vect2[i]);
+	}
+	return pow(sum<T>(arr, size), 0.5);
 }
 
 template<typename T>
@@ -199,7 +53,6 @@ T derivative(functionType type, T num)
 	}
 }
 
-
 template<typename T>
 T sum(T* in, int n)
 {
@@ -210,6 +63,9 @@ T sum(T* in, int n)
 	}
 	return sum;
 }
+
+template<typename T>
+T mean(T* arr, int n) { return sum<T>(arr, n) / n; }
 
 template<typename T>
 T weighedSum(T* in, T* weights, int n)
@@ -281,7 +137,7 @@ public:
 		else
 		{
 			arr[cursor] = data;
-			cursor ++;
+			cursor++;
 		}
 	}
 
