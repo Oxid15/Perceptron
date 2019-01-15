@@ -121,20 +121,15 @@
     <ClCompile Include="Perceptron.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="effLog.csv" />
-    <None Include="excelLog.csv" />
-    <None Include="trainLog.csv" />
-    <None Include="simpleTrain.csv" />
-    <None Include="weightLog.csv" />
-  </ItemGroup>
-  <ItemGroup>
     <Text Include="currentConfig.txt" />
-    <Text Include="testLog.csv" />
-    <Text Include="simpleTest.csv" />
     <Text Include="testConfig.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="computing.h" />
+    <ClInclude Include="computations.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="test.csv" />
+    <None Include="train.csv" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
