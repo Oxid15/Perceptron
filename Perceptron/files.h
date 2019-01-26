@@ -57,7 +57,6 @@ void setrandomWeights(std::string inFileName, std::string outFileName, int seed,
 	}
 }
 
-
 template<typename T>
 T* getStrFromCsv(std::fstream& file, int length)
 {
@@ -123,4 +122,17 @@ T getAccuracyFromFile(std::string fileName, int output_length, int size)
 		}
 	}
 	return eff = correct / all;
+}
+
+template<typename T>
+void normalizeCsv(std::string fileName, int size)
+{
+	std::ifstream file(fileName);
+	for (int i = 0 ; i< size; i++)
+	{
+		T* data = new T[size];
+		data = getStrFromCsv(file);
+
+
+	}
 }
