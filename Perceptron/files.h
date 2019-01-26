@@ -58,7 +58,7 @@ void setrandomWeights(std::string inFileName, std::string outFileName, int seed,
 }
 
 template<typename T>
-T* getStrFromCsv(std::fstream& file, int length)
+T* readStrFromCsv(std::fstream& file, int length)
 {
 	T* output = new T;
 	for (int i = 0; i < length; i++)
@@ -70,9 +70,19 @@ T* getStrFromCsv(std::fstream& file, int length)
 }
 
 template<typename T>
-T* getStrFromFile(std::ifstream& trainSet)
+void writeStrCsv(std::fstream& file, T* str, int length)
 {
-	int size = arrLayers[0]->getNeuronsNum();
+	for (int i = 0; i < length; i++)
+	{
+		file << str[i];
+		file << ';';
+	}
+	file << "\n";
+}
+
+template<typename T>
+T* readStrFromFile(std::ifstream& trainSet, int size)
+{
 	T* output = new T[size];
 	for (int i = 0; i < size; i++)
 	{
@@ -125,14 +135,27 @@ T getAccuracyFromFile(std::string fileName, int output_length, int size)
 }
 
 template<typename T>
-void normalizeCsv(std::string fileName, int size)
+void normalizeCsv(std::string fileName, int size, int length)
 {
 	std::ifstream file(fileName);
-	for (int i = 0 ; i< size; i++)
+	T** data = new T*[size];
+	for (int i = 0; i < size; i++) { data[i] = new T[length]; }
+
+	T* norm = new T[size];
+	for (int i = 0; i < size; i++)
 	{
-		T* data = new T[size];
-		data = getStrFromCsv(file);
+		data[i] = readStrFromCsv(file, length);
+		norm[i] = euclidNorm(data[i]);
+		for (int j = 0; j < length; j++)
+		{
+			data[i][j] /= norm;
+		}
+	}
+	file.close();
 
-
+	std::ofstream out_file(fileName);
+	for (int i = 0; i < size; i++)
+	{
+		writeStrCsv<T>(file, data[i], length);
 	}
 }

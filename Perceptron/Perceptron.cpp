@@ -309,10 +309,11 @@ class NeuralNet
 
 		for (int i = 0; i < size; i++)
 		{
-			net_out[i] = process(getStrFromFile<T>(trainSet));
+			int length = arrLayers[0]->getNeuronsNum();
+			net_out[i] = process(readStrFromFile<T>(trainSet, length));
 			for (int i = 0; i < out_len; i++)
 			{
-				target_out[i] = getStrFromCsv(trainSet, out_len);
+				target_out[i] = readStrFromCsv(trainSet, out_len);
 			}
 
 			switch (metric)
@@ -439,7 +440,8 @@ public:
 
 		for (int i = 0; i < size; i++)
 		{
-			net_out[i] = process(getStrFromFile<T>(set));
+			int length = arrLayers[0]->getNeuronsNum();
+			net_out[i] = process(readStrFromFile<T>(set, length));
 		}
 		return net_out;
 	}
@@ -453,7 +455,8 @@ public:
 			{
 				int out_len = arrLayers[layers - 1]->getNeuronsNum();
 				T* net_out = new T[out_len];
-				net_out = process(getStrFromFile<T>(trainSet));
+				int length = arrLayers[0]->getNeuronsNum();
+				net_out = process(readStrFromFile<T>(trainSet, length));
 
 				T* target_out = new T[out_len];
 				for (int i = 0; i < out_len; i++)
@@ -462,7 +465,7 @@ public:
 				}
 				backpropagation(target_out, speed);
 
-				validate(fileName, size, metric);
+				valEff = validate(fileName, size, metric);
 			}
 		}
 	}

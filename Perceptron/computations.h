@@ -15,6 +15,12 @@ T randomNumber(int seed, int range)
 }
 
 template<typename T>
+T euclidNorm(T* vect, int size)
+{
+	return pow(sum<T>(elemPow<T>(vect, 2), size), 0.5);
+}
+
+template<typename T>
 T euclidNorm(T* vect1, T* vect2, int size)
 {
 	T* arr = new T[size];
@@ -23,6 +29,17 @@ T euclidNorm(T* vect1, T* vect2, int size)
 		arr[i] = (vect1[i] - vect2[i])*(vect1[i] - vect2[i]);
 	}
 	return pow(sum<T>(arr, size), 0.5);
+}
+
+template<typename T>
+T* elemPow(T* vect, int power)
+{
+	T* arr = new T[size];
+	for (int i = 0; i < size; i++)
+	{
+		arr[i] = pow(vect[i], power);
+	}
+	return arr;
 }
 
 template<typename T>
