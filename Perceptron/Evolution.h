@@ -1,8 +1,9 @@
 #include"Perceptron.cpp"
 
 template<typename T>
-void setrandomWeights(NeuralNet<T>& net, int seed, T range)
+void setrandomWeights(NeuralNet<T>& net, int seed, T maxWeight, T minWeight = 0)
 {
+	static std::default_random_engine engine;
 	int layers = net.getLayersNum();
 	for (int i = 0; i < layers; i++)
 	{
@@ -10,7 +11,7 @@ void setrandomWeights(NeuralNet<T>& net, int seed, T range)
 		for (int j = 0; j < neurons; j++)
 		{
 			if (i)
-				net.getLayers()[i]->getNeurons()[j]->setBias(randomNumber<T>(seed, range));
+				net.getLayers()[i]->getNeurons()[j]->setBias(randomNumber<T>(seed, engine, maxWeight, minWeight));
 			else
 				net.getLayers()[i]->getNeurons()[j]->setBias(0);
 			seed++;
@@ -26,7 +27,7 @@ void setrandomWeights(NeuralNet<T>& net, int seed, T range)
 		{
 			for (int j = 0; j < height; j++)
 			{
-				net.getMatrixes()[k]->setWeight(i, j, randomNumber<T>(seed, range));
+				net.getMatrixes()[k]->setWeight(i, j, randomNumber<T>(seed, engine, maxWeight, minWeight));
 				seed++;
 			}
 		}
@@ -34,8 +35,9 @@ void setrandomWeights(NeuralNet<T>& net, int seed, T range)
 }
 
 template <typename T>
-NeuralNet<T>* init(int inputSize, int outputSize, int seed = 42, int population_size = 10, T weightRange = 1)
+NeuralNet<T>* init(int inputSize, int outputSize, T maxWeight, T minWeight = 0, int seed = 42, int population_size = 10)
 {
+	static std::default_random_engine engine;
 	NeuralNet<T>* population = new NeuralNet<T>[population_size];
 
 	int layers = population[0].getLayersNum();
@@ -48,7 +50,7 @@ NeuralNet<T>* init(int inputSize, int outputSize, int seed = 42, int population_
 		biases[i] = new T[neurons[i]];
 		for (int j = 0; j < neurons[i]; j++)
 		{
-			biases[i][j] = randomNumber<T>(seed, weightRange);
+			biases[i][j] = randomNumber<T>(seed, engine, maxWeight, minWeight);
 			seed++;
 		}
 	}
@@ -59,7 +61,7 @@ NeuralNet<T>* init(int inputSize, int outputSize, int seed = 42, int population_
 		weights[i] = new T[neurons[i] * neurons[i + 1]];
 		for (int j = 0; j < neurons[i] * neurons[i + 1]; j++)
 		{
-			weights[i][j] = randomNumber<T>(seed, weightRange);
+			weights[i][j] = randomNumber<T>(seed, engine, maxWeight, minWeight);
 			seed++;
 		}
 	}
@@ -74,13 +76,14 @@ NeuralNet<T>* init(int inputSize, int outputSize, int seed = 42, int population_
 template <typename T>
 void mutation(NeuralNet<T>* population, int population_size = 10, float mutation_chance = 0.05, int seed = 42)
 {
+	static std::default_random_engine engine;
 	for (int i = 0; i < population_size; i++)
 	{
-		float chance = randomNumber(seed, 1);
+		float chance = randomNumber<T>(seed, engine, 1);
 		if (chance <= mutation_chance)
 		{
-			float mut_variant = randomNumber(seed, 1);
-			if (mut_variant >= 0.5)
+			float mut_prop = randomNumber<T>(seed, engine, 1);
+			if (mut_prop >= 0.5)
 			{
 				//adds layer	
 			}

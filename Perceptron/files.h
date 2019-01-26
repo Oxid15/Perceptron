@@ -2,10 +2,11 @@
 #include<string>
 
 template<typename T>
-void setrandomWeights(std::string inFileName, std::string outFileName, int seed, T range)
+void setrandomWeights(std::string inFileName, std::string outFileName, int seed, T maxWeight, T minWeight = 0)
 {
 	std::ifstream inFile(inFileName);
 	std::ofstream outFile(outFileName);
+	static std::default_random_engine engine;
 	int layers;
 	inFile >> layers;
 
@@ -35,7 +36,7 @@ void setrandomWeights(std::string inFileName, std::string outFileName, int seed,
 		for (int j = 0; j < neurons[i]; j++)
 		{
 			if (i)
-				outFile << randomNumber<T>(seed, range) << " ";
+				outFile << randomNumber<T>(seed, engine, maxWeight, minWeight) << " ";
 			else
 				outFile << "0 ";
 			seed++;
@@ -49,7 +50,7 @@ void setrandomWeights(std::string inFileName, std::string outFileName, int seed,
 		{
 			for (int j = 0; j < neurons[k + 1]; j++)
 			{
-				outFile << randomNumber<T>(seed, range) << " ";
+				outFile << randomNumber<T>(seed, engine, maxWeight, minWeight) << " ";
 				seed++;
 			}
 		}
@@ -58,7 +59,16 @@ void setrandomWeights(std::string inFileName, std::string outFileName, int seed,
 }
 
 template<typename T>
-T* readStrFromCsv(std::fstream& file, int length)
+T readValueCsv(std::ifstream& file)
+{
+	T result;
+	file << result;
+	file.get();
+	return result;
+}
+
+template<typename T>
+T* readStrCsv(std::fstream& file, int length)
 {
 	T* output = new T;
 	for (int i = 0; i < length; i++)
@@ -81,12 +91,12 @@ void writeStrCsv(std::fstream& file, T* str, int length)
 }
 
 template<typename T>
-T* readStrFromFile(std::ifstream& trainSet, int size)
+T* readStrFile(std::ifstream& trainSet, int size)
 {
 	T* output = new T[size];
 	for (int i = 0; i < size; i++)
 	{
-		output[i] = getValueFromCsv(trainSet);
+		output[i] = readValueCsv<T>(trainSet);
 	}
 	return output;
 }
@@ -106,11 +116,11 @@ T getAccuracyFromFile(std::string fileName, int output_length, int size)
 			T* target = new T[output_length];
 			for (int i = 0; i < output_length; i++)
 			{
-				output[i] = getValueFromCsv(file);
+				output[i] = readValueCsv(file);
 			}
 			for (int i = 0; i < output_length; i++)
 			{
-				output[i] = getValueFromCsv(file);
+				output[i] = readValueCsv(file);
 			}
 			for (int i = 0; i < output_length; i++)
 			{
@@ -144,7 +154,7 @@ void normalizeCsv(std::string fileName, int size, int length)
 	T* norm = new T[size];
 	for (int i = 0; i < size; i++)
 	{
-		data[i] = readStrFromCsv(file, length);
+		data[i] = readStrCsv(file, length);
 		norm[i] = euclidNorm(data[i]);
 		for (int j = 0; j < length; j++)
 		{

@@ -1,8 +1,7 @@
 #include<iostream>
-#include"Evolution.cpp"
+#include"Evolution.h"
 
 void main()
 {
-	NeuralNet<float> n("testConfig.txt");
-	n.fileOutput("currentConfig.txt");
+	system("pause");
 }

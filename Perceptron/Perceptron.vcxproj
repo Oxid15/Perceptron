@@ -122,6 +122,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="currentConfig.txt" />
+    <Text Include="test.txt" />
     <Text Include="testConfig.txt" />
   </ItemGroup>
   <ItemGroup>
