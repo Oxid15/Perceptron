@@ -20,8 +20,7 @@ void setrandomWeights(std::string inFileName, std::string outFileName, int seed,
 	}
 
 	outFile << layers << "\n";
-
-	outFile << type << "\n";
+	outFile << type   << "\n";
 
 	for (int i = 0; i < layers; i++)
 	{
@@ -59,21 +58,12 @@ void setrandomWeights(std::string inFileName, std::string outFileName, int seed,
 }
 
 template<typename T>
-T readValueCsv(std::ifstream& file)
+T* readStrCsv(std::fstream& file, int length)			
 {
-	T result;
-	file << result;
-	file.get();
-	return result;
-}
-
-template<typename T>
-T* readStrCsv(std::fstream& file, int length)
-{
-	T* output = new T;
+	T* output = new T[length];
 	for (int i = 0; i < length; i++)
 	{
-		file << output[i];
+		file >> output[i];
 		file.get();
 	}
 	return output;
@@ -91,17 +81,6 @@ void writeStrCsv(std::fstream& file, T* str, int length)
 }
 
 template<typename T>
-T* readStrFile(std::ifstream& trainSet, int size)
-{
-	T* output = new T[size];
-	for (int i = 0; i < size; i++)
-	{
-		output[i] = readValueCsv<T>(trainSet);
-	}
-	return output;
-}
-
-template<typename T>
 T getAccuracyFromFile(std::string fileName, int output_length, int size)
 {
 	std::ifstream file(fileName);
@@ -116,11 +95,13 @@ T getAccuracyFromFile(std::string fileName, int output_length, int size)
 			T* target = new T[output_length];
 			for (int i = 0; i < output_length; i++)
 			{
-				output[i] = readValueCsv(file);
+				file << output[i];
+				file.get();
 			}
 			for (int i = 0; i < output_length; i++)
 			{
-				output[i] = readValueCsv(file);
+				file << output[i];
+				file.get();
 			}
 			for (int i = 0; i < output_length; i++)
 			{
@@ -142,30 +123,4 @@ T getAccuracyFromFile(std::string fileName, int output_length, int size)
 		}
 	}
 	return eff = correct / all;
-}
-
-template<typename T>
-void normalizeCsv(std::string fileName, int size, int length)
-{
-	std::ifstream file(fileName);
-	T** data = new T*[size];
-	for (int i = 0; i < size; i++) { data[i] = new T[length]; }
-
-	T* norm = new T[size];
-	for (int i = 0; i < size; i++)
-	{
-		data[i] = readStrCsv(file, length);
-		norm[i] = euclidNorm(data[i]);
-		for (int j = 0; j < length; j++)
-		{
-			data[i][j] /= norm;
-		}
-	}
-	file.close();
-
-	std::ofstream out_file(fileName);
-	for (int i = 0; i < size; i++)
-	{
-		writeStrCsv<T>(file, data[i], length);
-	}
 }

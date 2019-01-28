@@ -3,6 +3,8 @@
 
 enum metrics { accuracy, meanEuclidNorm };
 
+enum taskType { bin_classification , regression};
+
 template<typename T>
 class Neuron
 {
@@ -67,32 +69,6 @@ class AdjMatrix
 	int length;
 	int height;
 
-	void setWeights(T* layerError, T* layerInput, T speed)
-	{
-		T** dWeights = new T*[length];
-		for (int i = 0; i < length; i++)
-		{
-			dWeights[i] = new T[height];
-		}
-
-		for (int i = 0; i < height; i++)
-		{
-			for (int j = 0; j < length; j++)
-			{
-				dWeights[j][i] = (speed * layerInput[i] * layerError[j]);
-			}
-		}
-
-		for (int i = 0; i < height; i++)
-		{
-			for (int j = 0; j < length; j++)
-			{
-				arr[j][i] += dWeights[j][i];
-			}
-		}
-
-	}
-
 public:
 	AdjMatrix()
 	{
@@ -154,6 +130,32 @@ public:
 	}
 
 	void setWeight(int i, int j, T weight) { arr[i][j] = weight; }
+
+	void setWeights(T* layerError, T* layerInput, T speed)
+	{
+		T** dWeights = new T*[length];
+		for (int i = 0; i < length; i++)
+		{
+			dWeights[i] = new T[height];
+		}
+
+		for (int i = 0; i < height; i++)
+		{
+			for (int j = 0; j < length; j++)
+			{
+				dWeights[j][i] = (speed * layerInput[i] * layerError[j]);
+			}
+		}
+
+		for (int i = 0; i < height; i++)
+		{
+			for (int j = 0; j < length; j++)
+			{
+				arr[j][i] += dWeights[j][i];
+			}
+		}
+
+	}
 
 	T getWeight(int i, int j) { return arr[i][j]; }
 	int getLength() { return length; }
@@ -259,6 +261,8 @@ class NeuralNet
 	expArray<Layer<T>> arrLayers;
 	expArray<AdjMatrix<T>> arrMatrixes;
 	functionType type;
+	//int out_len;
+	//T**net_out;
 	T valEff;
 
 	void backpropagation(T* target, T speed)
@@ -278,7 +282,7 @@ class NeuralNet
 		{
 			for (int j = 0; j < arrLayers[i]->getNeuronsNum(); j++)
 			{
-				arrLayers[i]->getNeurons()[j]->addToBias(arrLayers[i]->getError(j), speed);
+				arrLayers[i]->getNeurons()[j].addToBias(arrLayers[i]->getError(j), speed);
 			}
 		}
 	}
@@ -286,62 +290,11 @@ class NeuralNet
 	T* process(T* input)
 	{
 		arrLayers[0]->process(input);
-
 		for (int i = 1; i < layers; i++)
 		{
 			arrLayers[i]->process(arrLayers[i - 1]->getOutput(), arrMatrixes[i - 1], type);
 		}
 		return arrLayers[layers - 1]->getOutput();
-	}
-
-	T validate(std::string fileName, int size, metrics metric)
-	{
-		std::ifstream file(fileName);
-
-		int out_len = arrLayers[layers - 1]->getNeuronsNum();
-		T** net_out = new T*[size];
-		for (int i = 0; i < size; i++)
-			net_out[i] = new T[out_len];
-
-		T** target_out = new T*[size];
-		for (int i = 0; i < size; i++)
-			target_out[i] = new T[out_len];
-
-		for (int i = 0; i < size; i++)
-		{
-			int length = arrLayers[0]->getNeuronsNum();
-			net_out[i] = process(readStrFile<T>(file, length));
-			for (int i = 0; i < out_len; i++)
-			{
-				target_out[i] = readStrCsv(file, out_len);
-			}
-
-			switch (metric)
-			{
-			case (metrics::accuracy):
-			{
-				int right = 0;
-				int all = size;
-
-				for (int i = 0; i < size; i++)
-				{
-					if (net_out[i] == target_out[i])
-						right++;
-				}
-				T acc = right / all;
-				return acc;
-			}
-			case (metrics::meanEuclidNorm):
-			{
-				T* distances = new T[size];
-				for (int i = 0; i < size; i++)
-				{
-					distances[i] = euclidNorm<T>(target_out, net_out, out_len);
-				}
-				return mean<T>(distances, size);
-			}
-			}
-		}
 	}
 
 public:
@@ -430,6 +383,73 @@ public:
 		}
 	}
 
+	T validate(std::string dataFileName, std::string resFileName, int size, metrics metric = metrics::accuracy, taskType type = taskType::bin_classification)
+	{
+		std::fstream data(dataFileName);
+		std::fstream res(resFileName);
+
+		int out_len = arrLayers[layers - 1]->getNeuronsNum();
+		T** net_out = new T*[size];
+		for (int i = 0; i < size; i++)
+			net_out[i] = new T[out_len];
+
+		T** target_out = new T*[size];
+		for (int i = 0; i < size; i++)
+			target_out[i] = new T[out_len];
+
+		for (int i = 0; i < size; i++)
+		{
+			int length = arrLayers[0]->getNeuronsNum();
+			T* out = new T[out_len];
+			out = process(readStrCsv<T>(data, length));
+
+			for (int j = 0; j < out_len; j++)
+			{
+				net_out[i][j] = out[j];
+			}
+
+			target_out[i] = readStrCsv<T>(res, out_len);
+
+			switch (type)
+			{
+			case(taskType::bin_classification):
+			{
+				if (net_out[i][0] >= 0.5)
+					net_out[i][0] = 1;
+				else
+					net_out[i][0] = 0;
+			}
+			}
+		}
+
+		switch (metric)
+		{
+		case (metrics::accuracy):
+		{
+			int right = 0;
+			int all = size;
+
+			for (int i = 0; i < size; i++)
+			{
+				if (net_out[i][0] == target_out[i][0])
+					right++;
+			}
+			T acc;
+			acc = double(right) / double(all);
+			return acc;
+		}
+		case (metrics::meanEuclidNorm):
+		{
+			T* distances = new T[size];
+			for (int i = 0; i < size; i++)
+			{
+				distances[i] = euclidNorm<T>(target_out[i], net_out[i], out_len);
+			}
+			return mean<T>(distances, size);
+		}
+		}
+	}
+
 	T** dataProcess(std::string fileName, int size)
 	{
 		std::ifstream set(fileName);
@@ -441,31 +461,31 @@ public:
 		for (int i = 0; i < size; i++)
 		{
 			int length = arrLayers[0]->getNeuronsNum();
-			net_out[i] = process(readStrFile<T>(set, length));
+			net_out[i] = process(readStrCsv<T>(set, length));
 		}
 		return net_out;
 	}
 
-	void fit(std::string fileName, int size, int epochs, T speed = 1, metrics metric = metrics::accuracy)
+	void fit(std::string dataFileName, std::string resFileName, int size, 
+				int epochs, T speed = 1, metrics metric = metrics::accuracy, taskType type = taskType::bin_classification)
 	{
 		for (int k = 0; k < epochs; k++)
 		{
-			std::ifstream trainSet(fileName);
+			std::fstream data(dataFileName);
+			std::fstream res(resFileName);
 			for (int i = 0; i < size; i++)
 			{
 				int out_len = arrLayers[layers - 1]->getNeuronsNum();
 				T* net_out = new T[out_len];
 				int length = arrLayers[0]->getNeuronsNum();
-				net_out = process(readStrFile<T>(trainSet, length));
+				net_out = process(readStrCsv<T>(data, length));
 
 				T* target_out = new T[out_len];
-				for (int i = 0; i < out_len; i++)
-				{
-					target_out[i] = readValueCsv(trainSet);
-				}
+				target_out = readStrCsv<T>(res, out_len);
+
 				backpropagation(target_out, speed);
 
-				valEff = validate(fileName, size, metric);
+				valEff = validate(dataFileName, resFileName, size, metric, type);
 			}
 		}
 	}
@@ -487,6 +507,8 @@ public:
 	int getMatrixesNum() { return matrixes; }
 
 	int getLayersNum() { return layers; }
+
+	T getEff() { return valEff; }
 
 	void fileOutput(std::string fileName)
 	{

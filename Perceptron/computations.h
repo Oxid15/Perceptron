@@ -84,6 +84,21 @@ template<typename T>
 T mean(T* arr, int n) { return sum<T>(arr, n) / n; }   
 
 template<typename T>
+T* normalizeVect(T* vect, int size)
+{
+	T norm = 0;
+	for (int i = 0; i < size; i++)
+	{
+		norm = euclidNorm(vect);
+		for (int j = 0; j < size; j++)
+		{
+			vect[j] /= norm;
+		}
+	}
+	return vect;
+}
+
+template<typename T>
 T weighedSum(T* in, T* weights, int size)		 
 {
 	T sum = 0;
@@ -95,13 +110,25 @@ T weighedSum(T* in, T* weights, int size)
 }
 
 template<typename T>
-class expArray
+class expArray								
 {
 	T* arr;
 	int size;
 	int cursor;
 
 	void expand()
+	{
+		int newSize = this->size * 2;
+		T* newArr = new T[newSize];
+		for (int i = 0; i < size; i++)
+		{
+			newArr[i] = arr[i];
+		}
+		arr = newArr;
+		size *= 2;
+	}
+
+	void expand(int cur)
 	{
 		int newSize = this->size * 2;
 		T* newArr = new T[newSize];
@@ -137,7 +164,7 @@ public:
 		}
 	}
 
-	void add(T& data, int index)
+	void add(T data, int index)
 	{
 		if (index == size)
 		{
