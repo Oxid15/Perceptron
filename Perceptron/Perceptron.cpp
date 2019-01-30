@@ -261,8 +261,8 @@ class NeuralNet
 	expArray<Layer<T>> arrLayers;
 	expArray<AdjMatrix<T>> arrMatrixes;
 	functionType type;
-	//int out_len;
-	//T**net_out;
+	int out_len;
+	T*net_out;
 	T valEff;
 
 	void backpropagation(T* target, T speed)
@@ -305,6 +305,8 @@ public:
 		matrixes = 1;
 		type = sigmoid;
 		empty = true;
+		out_len = 1;
+		net_out = new T;
 	}
 
 	NeuralNet(std::string fileName)
@@ -381,6 +383,9 @@ public:
 		{
 			arrMatrixes.add(*new AdjMatrix<T>(weights[i], neurons[i + 1], neurons[i]), i);
 		}
+
+		out_len = arrLayers[layers - 1]->getNeuronsNum();
+		net_out = new T[out_len];
 	}
 
 	T validate(std::string dataFileName, std::string resFileName, int size, metrics metric = metrics::accuracy, taskType type = taskType::bin_classification)
@@ -388,10 +393,9 @@ public:
 		std::fstream data(dataFileName);
 		std::fstream res(resFileName);
 
-		int out_len = arrLayers[layers - 1]->getNeuronsNum();
-		T** net_out = new T*[size];
+		T** output = new T*[size];
 		for (int i = 0; i < size; i++)
-			net_out[i] = new T[out_len];
+			output[i] = new T[out_len];
 
 		T** target_out = new T*[size];
 		for (int i = 0; i < size; i++)
@@ -405,7 +409,7 @@ public:
 
 			for (int j = 0; j < out_len; j++)
 			{
-				net_out[i][j] = out[j];
+				output[i][j] = out[j];
 			}
 
 			target_out[i] = readStrCsv<T>(res, out_len);
@@ -414,10 +418,10 @@ public:
 			{
 			case(taskType::bin_classification):
 			{
-				if (net_out[i][0] >= 0.5)
-					net_out[i][0] = 1;
+				if (output[i][0] >= 0.5)
+					output[i][0] = 1;
 				else
-					net_out[i][0] = 0;
+					output[i][0] = 0;
 			}
 			}
 		}
@@ -431,7 +435,7 @@ public:
 
 			for (int i = 0; i < size; i++)
 			{
-				if (net_out[i][0] == target_out[i][0])
+				if (output[i][0] == target_out[i][0])
 					right++;
 			}
 			T acc;
@@ -443,7 +447,7 @@ public:
 			T* distances = new T[size];
 			for (int i = 0; i < size; i++)
 			{
-				distances[i] = euclidNorm<T>(target_out[i], net_out[i], out_len);
+				distances[i] = euclidNorm<T>(target_out[i], output[i], out_len);
 			}
 			return mean<T>(distances, size);
 		}
@@ -475,8 +479,6 @@ public:
 			std::fstream res(resFileName);
 			for (int i = 0; i < size; i++)
 			{
-				int out_len = arrLayers[layers - 1]->getNeuronsNum();
-				T* net_out = new T[out_len];
 				int length = arrLayers[0]->getNeuronsNum();
 				net_out = process(readStrCsv<T>(data, length));
 
@@ -492,10 +494,10 @@ public:
 
 	void addLayer(int neurons, int index = 0, T weightRange = 1)
 	{
-		//...
+		//...	
 	}
 
-	void addNeuron(int index, T weightRange = 1)
+	void addNeuron(int index = 0, T weightRange = 1)
 	{
 		//...
 	}
@@ -509,6 +511,8 @@ public:
 	int getLayersNum() { return layers; }
 
 	T getEff() { return valEff; }
+
+	T* getOutput() { return net_out; }
 
 	void fileOutput(std::string fileName)
 	{
