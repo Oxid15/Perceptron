@@ -20,7 +20,7 @@ void setrandomWeights(std::string inFileName, std::string outFileName, int seed,
 	}
 
 	outFile << layers << "\n";
-	outFile << type   << "\n";
+	outFile << type << "\n";
 
 	for (int i = 0; i < layers; i++)
 	{
@@ -58,7 +58,7 @@ void setrandomWeights(std::string inFileName, std::string outFileName, int seed,
 }
 
 template<typename T>
-T* readStrCsv(std::fstream& file, int length)			
+T* readStrCsv(std::fstream& file, int length)
 {
 	T* output = new T[length];
 	for (int i = 0; i < length; i++)

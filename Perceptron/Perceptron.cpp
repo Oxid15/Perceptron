@@ -3,7 +3,7 @@
 
 enum metrics { accuracy, meanEuclidNorm };
 
-enum taskType { bin_classification , regression};
+enum taskType { bin_classification, regression };
 
 template<typename T>
 class Neuron
@@ -233,11 +233,6 @@ public:
 	}
 
 	void setNeurons(int _neurons) { neurons = _neurons; }
-
-	void add(T weightRange = 1)
-	{
-
-	}
 
 	T* getInput() { return input; }
 
@@ -470,8 +465,8 @@ public:
 		return net_out;
 	}
 
-	void fit(std::string dataFileName, std::string resFileName, int size, 
-				int epochs, T speed = 1, metrics metric = metrics::accuracy, taskType type = taskType::bin_classification)
+	void fit(std::string dataFileName, std::string resFileName, int size,
+		int epochs, T speed = 1, metrics metric = metrics::accuracy, taskType type = taskType::bin_classification)
 	{
 		for (int k = 0; k < epochs; k++)
 		{
@@ -494,12 +489,32 @@ public:
 
 	void addLayer(int neurons, int index = 0, T weightRange = 1)
 	{
-		//...	
+		T* biases = new T[neurons];
+		for (int i = 0; i < neurons; i++) { biases[i] = 1; }
+
+		int prevNum = this->getLayersNum() - 2]->getNeuronsNum();
+		int nextNum = arrLayers[this->getLayersNum() - 1]->getNeuronsNum();
+
+		Layer<T>* layer = new Layer<T>(biases, arrLayers[prevNum, neurons, nextNum);
+		arrLayers.add(*layer);
+		layers++;
+
+		//delete last matrix in array and add two new matrixes with random weights
 	}
 
 	void addNeuron(int index = 0, T weightRange = 1)
 	{
-		//...
+
+	}
+
+	void delLayer(int index = 0)
+	{
+
+	}
+
+	void delNeuron(int index = 0)
+	{
+
 	}
 
 	AdjMatrix<T>** getMatrixes() { return arrMatrixes; }
