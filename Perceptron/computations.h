@@ -5,7 +5,7 @@
 enum functionType { sigmoid, softpls };
 
 template<typename T>
-T randomNumber(int seed, std::default_random_engine& engine, int max, int min = 0)		   
+T randomNumber(int seed, std::default_random_engine& engine, int max, int min = 0)
 {
 	std::uniform_real_distribution<T> d(min, max);
 	T weight;
@@ -14,7 +14,7 @@ T randomNumber(int seed, std::default_random_engine& engine, int max, int min = 
 }
 
 template<typename T>
-T* elemPow(T* vect, int size, int power)  
+T* elemPow(T* vect, int size, int power)
 {
 	T* arr = new T[size];
 	for (int i = 0; i < size; i++)
@@ -25,23 +25,23 @@ T* elemPow(T* vect, int size, int power)
 }
 
 template<typename T>
-T sig(T num) { return 1 / (1 + exp(-num)); }	  
+T sig(T num) { return 1 / (1 + exp(-num)); }
 
 template<typename T>
-T sigDerivative(T num)						 
+T sigDerivative(T num)
 {
 	T ex = exp(-num);
 	return ex / ((1 + ex)*(1 + ex));
-}				  
+}
 
 template<typename T>
-T softplus(T num) { return log(1 + exp(num)); }		
+T softplus(T num) { return log(1 + exp(num)); }
 
 template<typename T>
-T softplusDerivative(T num) { return sig(num); }	
+T softplusDerivative(T num) { return sig(num); }
 
 template<typename T>
-T derivative(functionType type, T num)				
+T derivative(functionType type, T num)
 {
 	switch (type)
 	{
@@ -53,7 +53,7 @@ T derivative(functionType type, T num)
 }
 
 template<typename T>
-T sum(T* in, int n)							 
+T sum(T* in, int n)
 {
 	T sum = 0;
 	for (int i = 0; i < n; i++)
@@ -64,13 +64,13 @@ T sum(T* in, int n)
 }
 
 template<typename T>
-T euclidNorm(T* vect, int size)	
+T euclidNorm(T* vect, int size)
 {
 	return pow(sum<T>(elemPow<T>(vect, size, 2), size), 0.5);
 }
 
 template<typename T>
-T euclidNorm(T* vect1, T* vect2, int size) 
+T euclidNorm(T* vect1, T* vect2, int size)
 {
 	T* arr = new T[size];
 	for (int i = 0; i < size; i++)
@@ -81,7 +81,7 @@ T euclidNorm(T* vect1, T* vect2, int size)
 }
 
 template<typename T>
-T mean(T* arr, int n) { return sum<T>(arr, n) / n; }   
+T mean(T* arr, int n) { return sum<T>(arr, n) / n; }
 
 template<typename T>
 T* normalizeVect(T* vect, int size)
@@ -99,7 +99,7 @@ T* normalizeVect(T* vect, int size)
 }
 
 template<typename T>
-T weighedSum(T* in, T* weights, int size)		 
+T weighedSum(T* in, T* weights, int size)
 {
 	T sum = 0;
 	for (int i = 0; i < size; i++)
@@ -110,7 +110,7 @@ T weighedSum(T* in, T* weights, int size)
 }
 
 template<typename T>
-class expArray								
+class expArray
 {
 	T* arr;
 	int size;
@@ -149,6 +149,18 @@ public:
 		cursor = 0;
 	}
 
+	expArray(T* data, int _size)
+	{
+		arr = new T[2];
+		size = 2;
+		cursor = 0;
+
+		for (int i = 0; i < _size; i++)
+		{
+			this->add(data[i]);
+		}
+	}
+
 	void add(T data)
 	{
 		if (cursor == size)
@@ -182,6 +194,35 @@ public:
 			arr[cursor] = data;
 			cursor++;
 		}
+	}
+
+	void del(int index = 0)
+	{
+		try
+		{
+			if (index < size)
+			{
+				int j = 0;
+				T* newArr = new T[size];
+				for (int i = 0; i < cursor; i++)
+				{
+					if (i != index)
+					{
+						newArr[j] = arr[i];
+						j++;
+					}
+					
+				}
+				arr = newArr;
+			}
+			else
+				throw "Access violation";
+		}
+		catch (char* str)
+		{
+			std::cerr << str << "\n";
+		}
+		return;
 	}
 
 	T* operator [] (int n)
