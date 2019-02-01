@@ -180,9 +180,8 @@ public:
 	{
 		if (index == size)
 		{
-			expand();
+			this->expand();
 			add(data, index);
-			return;
 		}
 		else if (index >= 0 and index < cursor)
 		{
@@ -249,6 +248,8 @@ public:
 		}
 		return nullptr;
 	}
+
+	int getSize() { return size; }
 
 	T* getArr()
 	{
