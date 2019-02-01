@@ -77,6 +77,28 @@ public:
 		arr = new T*;
 	}
 
+	AdjMatrix(int _length, int _height, int seed, T maxWeight, T minWeight)
+	{
+		length = _length;
+		height = _height;
+		arr = new T*[length];
+		for (int i = 0; i < length; i++)
+		{
+			arr[i] = new T[height];
+		}
+
+		int k = 0;
+		std::default_random_engine engine;
+		for (int i = 0; i < height; i++)
+		{
+			for (int j = 0; j < length; j++)
+			{
+				arr[j][i] = randomNumber<T>(seed, engine, maxWeight, minWeight);
+				k++;
+			}
+		}
+	}
+
 	AdjMatrix(T* weights, int _length = 1, int _height = 1)
 	{
 		length = _length;
@@ -154,7 +176,6 @@ public:
 				arr[j][i] += dWeights[j][i];
 			}
 		}
-
 	}
 
 	T getWeight(int i, int j) { return arr[i][j]; }
@@ -451,7 +472,7 @@ public:
 
 	T** dataProcess(std::string fileName, int size)
 	{
-		std::ifstream set(fileName);
+		std::fstream set(fileName);
 		int out_len = arrLayers[layers - 1]->getNeuronsNum();
 		T** net_out = new T*[out_len];
 		for (int i = 0; i < out_len; i++)
@@ -487,19 +508,26 @@ public:
 		}
 	}
 
-	void addLayer(int neurons, int index = 0, T weightRange = 1)
+	void addLayer(int neurons, T maxWeight, T minWeight = 0, int index = 0, int seed = 42)
 	{
 		T* biases = new T[neurons];
-		for (int i = 0; i < neurons; i++) { biases[i] = 1; }
+		for (int i = 0; i < neurons; i++) { biases[i] = 0; }
 
-		int prevNum = this->getLayersNum() - 2]->getNeuronsNum();
+		int prevNum = arrLayers[this->getLayersNum() - 2]->getNeuronsNum();
 		int nextNum = arrLayers[this->getLayersNum() - 1]->getNeuronsNum();
 
-		Layer<T>* layer = new Layer<T>(biases, arrLayers[prevNum, neurons, nextNum);
-		arrLayers.add(*layer);
+		Layer<T>* layer = new Layer<T>(biases, prevNum, neurons, nextNum);
+		arrLayers.add(*layer, layers - 1);
 		layers++;
 
-		//delete last matrix in array and add two new matrixes with random weights
+		arrMatrixes.del(matrixes - 1);
+		matrixes--;
+
+		AdjMatrix<T>* matrix1 = new AdjMatrix<T>(neurons, prevNum, seed, maxWeight, minWeight);
+		AdjMatrix<T>* matrix2 = new AdjMatrix<T>(nextNum, neurons, seed, maxWeight, minWeight);
+		arrMatrixes.add(*matrix1);
+		arrMatrixes.add(*matrix2);
+		matrixes += 2;
 	}
 
 	void addNeuron(int index = 0, T weightRange = 1)
@@ -517,7 +545,7 @@ public:
 
 	}
 
-	AdjMatrix<T>** getMatrixes() { return arrMatrixes; }
+	expArray<AdjMatrix<T>> getMatrixes() { return arrMatrixes; }
 
 	Layer<T>** getLayers() { return arrLayers; }
 

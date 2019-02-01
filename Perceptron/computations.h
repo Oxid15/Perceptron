@@ -184,8 +184,15 @@ public:
 			add(data, index);
 			return;
 		}
-		else if (index < size and index >= 0)
+		else if (index >= 0 and index < cursor)
 		{
+			if (cursor == size)
+				expand();
+
+			for (int i = cursor - 1; i >= index; i--)
+			{
+				arr[i + 1] = arr[i];
+			}
 			arr[index] = data;
 			cursor++;
 		}
@@ -211,9 +218,9 @@ public:
 						newArr[j] = arr[i];
 						j++;
 					}
-
 				}
 				arr = newArr;
+				cursor = index;
 			}
 			else
 				throw "Access violation";
