@@ -4,9 +4,12 @@
 void main()
 {
 	NeuralNet<float> net("testConfig.txt");
-	net.addLayer(2, 1);
+	net.addNeuron(1, 1);
+	net.addNeuron(1, 1);
+	net.addLayer(3, 1);
 	net.addNeuron(2, 1);
 
-	//float e = net.validate("testData.csv", "testResults.csv", 4);
+	net.fit("testData.csv", "testResults.csv", 4, 5000);
+	net.getEff();
 	net.fileOutput("currentConfig.txt");
 }

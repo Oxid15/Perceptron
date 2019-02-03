@@ -125,19 +125,7 @@ class expArray
 			newArr[i] = arr[i];
 		}
 		arr = newArr;
-		size *= 2;
-	}
-
-	void expand(int cur)
-	{
-		int newSize = this->size * 2;
-		T* newArr = new T[newSize];
-		for (int i = 0; i < size; i++)
-		{
-			newArr[i] = arr[i];
-		}
-		arr = newArr;
-		size *= 2;
+		size = newSize;
 	}
 
 public:

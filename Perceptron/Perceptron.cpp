@@ -191,7 +191,7 @@ class Layer
 	T* output;
 	T* error;
 	int neurons;
-	int lenInput;
+	int prevNum;
 	int nextNum;
 public:
 	Layer()
@@ -200,16 +200,16 @@ public:
 		output = new T;
 		error = new T;
 		neurons = 1;
-		lenInput = 1;
+		prevNum = 1;
 		nextNum = 1;
 	}
 
-	Layer(T* biases, int prevNum = 1, int _neuronsNum = 1, int _nextNum = 1)
+	Layer(T* biases, int _prevNum = 1, int _neuronsNum = 1, int _nextNum = 1)
 	{
 		neurons = _neuronsNum;
-		lenInput = prevNum;
+		prevNum = _prevNum;
 		nextNum = _nextNum;
-		input = new T[lenInput];
+		input = new T[prevNum];
 		output = new T[neurons];
 		error = new T[neurons];
 
@@ -242,7 +242,7 @@ public:
 		for (int i = 0; i < neurons; i++)
 		{
 			error[i] = (target[i] - output[i]) *
-				derivative<T>(funcType, weighedSum<T>(input, matrix->getColWeights(i), lenInput) + arr[i]->getBias());
+				derivative<T>(funcType, weighedSum<T>(input, matrix->getColWeights(i), prevNum) + arr[i]->getBias());
 		}
 
 	}
@@ -252,7 +252,7 @@ public:
 		for (int i = 0; i < neurons; i++)
 		{
 			error[i] = (weighedSum(errors, thisMatrix->getStrWeights(i), arr[i]->getNextNum())) *
-				(derivative<T>(funcType, weighedSum<T>(input, prevMatrix->getColWeights(i), lenInput) + arr[i]->getBias()));
+				(derivative<T>(funcType, weighedSum<T>(input, prevMatrix->getColWeights(i), prevNum) + arr[i]->getBias()));
 		}
 	}
 
@@ -260,7 +260,7 @@ public:
 
 	void add()
 	{
-		Neuron<T>* neuron = new Neuron<T>(lenInput, nextNum, 0);
+		Neuron<T>* neuron = new Neuron<T>(prevNum, nextNum, 0);
 		arr.add(*neuron);
 		neurons++;
 	}
@@ -274,6 +274,10 @@ public:
 	T getError(int index) { return error[index]; }
 
 	expArray<Neuron<T>> getNeurons() { return arr; }
+
+	int getNextNum() { return nextNum; }
+
+	int getPrevNum() { return prevNum; }
 
 	int getNeuronsNum() { return neurons; }
 };
@@ -308,7 +312,7 @@ class NeuralNet
 		{
 			for (int j = 0; j < arrLayers[i]->getNeuronsNum(); j++)
 			{
-				arrLayers[i]->getNeurons()[j].addToBias(arrLayers[i]->getError(j), speed);
+				arrLayers[i]->getNeurons()[j]->addToBias(arrLayers[i]->getError(j), speed);
 			}
 		}
 	}
@@ -542,25 +546,20 @@ public:
 
 	void addNeuron(int layer, T maxWeight, T minWeight = 0, int seed = 0)
 	{
-		int prevNum = arrLayers[layer - 1]->getNeuronsNum();
-		int nextNum = arrLayers[layer + 1]->getNeuronsNum();
+		int prevNum = arrLayers[layer]->getPrevNum();
+		int nextNum = arrLayers[layer]->getNextNum();
 		int neurons = arrLayers[layer]->getNeuronsNum();
 
+		arrLayers[layer]->add();
 
-		Neuron<T>* neuron = new Neuron<T>(prevNum, nextNum, 0);
-		if (layer != 0 and layer < layers)
-		{
-			arrLayers[layer]->add();
+		arrMatrixes.del(layer);
+		arrMatrixes.del(layer - 1);
 
-			arrMatrixes.del(layer);
-			arrMatrixes.del(layer - 1);
+		AdjMatrix<T>* matrix1 = new AdjMatrix<T>(neurons + 1, prevNum, seed, maxWeight, minWeight);
+		AdjMatrix<T>* matrix2 = new AdjMatrix<T>(nextNum, neurons + 1, seed, maxWeight, minWeight);
 
-			AdjMatrix<T>* matrix1 = new AdjMatrix<T>(neurons + 1, prevNum, seed, maxWeight, minWeight);
-			AdjMatrix<T>* matrix2 = new AdjMatrix<T>(nextNum, neurons + 1, seed, maxWeight, minWeight);
-
-			arrMatrixes.add(*matrix1);
-			arrMatrixes.add(*matrix2);
-		}
+		arrMatrixes.add(*matrix1);
+		arrMatrixes.add(*matrix2);
 	}
 
 	void delLayer(int index = 0)
