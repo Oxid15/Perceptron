@@ -265,6 +265,12 @@ public:
 		neurons++;
 	}
 
+	void del(int index)
+	{
+		arr.del(index);
+		neurons--;
+	}
+
 	T* getInput() { return input; }
 
 	T* getOutput() { return output; }
@@ -546,30 +552,64 @@ public:
 
 	void addNeuron(int layer, T maxWeight, T minWeight = 0, int seed = 0)
 	{
-		int prevNum = arrLayers[layer]->getPrevNum();
-		int nextNum = arrLayers[layer]->getNextNum();
-		int neurons = arrLayers[layer]->getNeuronsNum();
+		if (layer > 0 and layer < layers)
+		{
+			int prevNum = arrLayers[layer]->getPrevNum();
+			int nextNum = arrLayers[layer]->getNextNum();
+			int neurons = arrLayers[layer]->getNeuronsNum();
 
-		arrLayers[layer]->add();
+			arrLayers[layer]->add();
 
-		arrMatrixes.del(layer);
-		arrMatrixes.del(layer - 1);
+			arrMatrixes.del(layer);
+			arrMatrixes.del(layer - 1);
 
-		AdjMatrix<T>* matrix1 = new AdjMatrix<T>(neurons + 1, prevNum, seed, maxWeight, minWeight);
-		AdjMatrix<T>* matrix2 = new AdjMatrix<T>(nextNum, neurons + 1, seed, maxWeight, minWeight);
+			AdjMatrix<T>* matrix1 = new AdjMatrix<T>(neurons + 1, prevNum, seed, maxWeight, minWeight);
+			AdjMatrix<T>* matrix2 = new AdjMatrix<T>(nextNum, neurons + 1, seed, maxWeight, minWeight);
 
-		arrMatrixes.add(*matrix1);
-		arrMatrixes.add(*matrix2);
+			arrMatrixes.add(*matrix1);
+			arrMatrixes.add(*matrix2);
+		}
 	}
 
-	void delLayer(int index = 0)
+	void delLayer(int index, T maxWeight, T minWeight = 0, int seed = 0)
 	{
+		if (index > 0 and index < layers)
+		{
+			int prevNum = arrLayers[layers - 2]->getNeuronsNum();
+			int nextNum = arrLayers[this->getLayersNum() - 1]->getNeuronsNum();
 
+			arrLayers.del(index);
+			layers--;
+
+			arrMatrixes.del(matrixes - 1);
+			arrMatrixes.del(matrixes - 2);
+			matrixes -= 2;
+
+			AdjMatrix<T>* matrix = new AdjMatrix<T>(nextNum, prevNum, seed, maxWeight, minWeight);
+			arrMatrixes.add(*matrix);
+			matrixes++;
+		}
 	}
 
-	void delNeuron(int index = 0)
+	void delNeuron(int layer, T maxWeight, T minWeight = 0, int seed = 0)
 	{
+		if (layer > 0 and layer < layers)
+		{
+			int prevNum = arrLayers[layer]->getPrevNum();
+			int nextNum = arrLayers[layer]->getNextNum();
+			int neurons = arrLayers[layer]->getNeuronsNum();
 
+			arrLayers[layer]->del(0);
+
+			arrMatrixes.del(layer);
+			arrMatrixes.del(layer - 1);
+
+			AdjMatrix<T>* matrix1 = new AdjMatrix<T>(neurons - 1, prevNum, seed, maxWeight, minWeight);
+			AdjMatrix<T>* matrix2 = new AdjMatrix<T>(nextNum, neurons - 1, seed, maxWeight, minWeight);
+
+			arrMatrixes.add(*matrix1);
+			arrMatrixes.add(*matrix2);
+		}
 	}
 
 	expArray<AdjMatrix<T>> getMatrixes() { return arrMatrixes; }
