@@ -1,9 +1,8 @@
 #include"Perceptron.cpp"
 
 template<typename T>
-void setrandomWeights(NeuralNet<T>& net, int seed, T maxWeight, T minWeight = 0)
+void setrandomWeights(NeuralNet<T>& net, std::default_random_engine engine, int seed, T maxWeight, T minWeight = 0)
 {
-	static std::default_random_engine engine;
 	int layers = net.getLayersNum();
 	for (int i = 0; i < layers; i++)
 	{
@@ -34,63 +33,122 @@ void setrandomWeights(NeuralNet<T>& net, int seed, T maxWeight, T minWeight = 0)
 	}
 }
 
-template <typename T>
-NeuralNet<T>* init(int inputSize, int outputSize, T maxWeight, T minWeight = 0, int seed = 42, int population_size = 10)
+template<typename T>
+class Population
 {
-	static std::default_random_engine engine;
-	NeuralNet<T>* population = new NeuralNet<T>[population_size];
+	NeuralNet<T>* population;
+	int size;
 
-	int layers = population[0].getLayersNum();
-	int matrixes = population[0].getMatrixesNum();
-	int neurons[2] = { inputSize, outputSize };
+	int inputSize;			 //?
+	int outputSize;			 //?
 
-	T** biases = new T*[layers];
-	for (int i = 0; i < layers; i++)
+	std::default_random_engine engine;
+
+public:
+
+	Population()
 	{
-		biases[i] = new T[neurons[i]];
-		for (int j = 0; j < neurons[i]; j++)
+		size = 1;
+		population = new NeuralNet<T>;
+	}
+
+	Population(int _inputSize, int _outputSize, T maxWeight, T minWeight = 0, int maxLayers = 3, int minLayers = 2,functionType type = sigmoid, int seed = 0, int population_size = 10)
+	{
+		size = population_size;
+		inputSize = _inputSize;
+		outputSize = _outputSize;
+
+		population = new NeuralNet<T>[size];
+
+		static std::default_random_engine engine;
+
+		int layers = randomNumber<T>(seed, engine, maxLayers + 1, minLayers);
+		int matrixes = layers - 1;
+		int* neurons = new int[layers];
+
+		neurons[0] = inputSize;
+		neurons[layers - 1] = outputSize;
+		for (int i = 1; i < layers - 1; i++)
 		{
-			biases[i][j] = randomNumber<T>(seed, engine, maxWeight, minWeight);
-			seed++;
+			neurons[i] = inputSize + int(randomNumber<T>(seed, engine, log(inputSize) + 2));
 		}
-	}
 
-	T** weights = new T*[matrixes];
-	for (int i = 0; i < matrixes; i++)
-	{
-		weights[i] = new T[neurons[i] * neurons[i + 1]];
-		for (int j = 0; j < neurons[i] * neurons[i + 1]; j++)
+		T** biases = new T*[layers];
+		for (int i = 0; i < layers; i++)
 		{
-			weights[i][j] = randomNumber<T>(seed, engine, maxWeight, minWeight);
-			seed++;
-		}
-	}
-
-	for (int i = 0; i < population_size; i++)
-	{
-		population[i].initialize(2, 1, functionType::sigmoid, neurons, biases, weights);
-	}
-	return population;
-}
-
-template <typename T>
-void mutation(NeuralNet<T>* population, int population_size = 10, float mutation_chance = 0.05, int seed = 42)
-{
-	static std::default_random_engine engine;
-	for (int i = 0; i < population_size; i++)
-	{
-		float chance = randomNumber<T>(seed, engine, 1);
-		if (chance <= mutation_chance)
-		{
-			float mut_prop = randomNumber<T>(seed, engine, 1);
-			if (mut_prop >= 0.5)
+			biases[i] = new T[neurons[i]];
+			for (int j = 0; j < neurons[i]; j++)
 			{
-				//adds layer	
-			}
-			else
-			{
-				//adds neurons to random layer
+				biases[i][j] = randomNumber<T>(seed, engine, maxWeight, minWeight);
+				seed++;
 			}
 		}
+
+		T** weights = new T*[matrixes];
+		for (int i = 0; i < matrixes; i++)
+		{
+			weights[i] = new T[neurons[i] * neurons[i + 1]];
+			for (int j = 0; j < neurons[i] * neurons[i + 1]; j++)
+			{
+				weights[i][j] = randomNumber<T>(seed, engine, maxWeight, minWeight);
+				seed++;
+			}
+		}
+
+		for (int i = 0; i < population_size; i++)
+		{
+			population[i].initialize(2, 1, type, neurons, biases, weights);
+		}
 	}
-}
+
+	void mutation(float mutation_chance = 0.05, T maxWeight = 1, T minWeight = 0, int seed = 0)
+	{
+		for (int i = 0; i < size; i++)
+		{
+			float chance = randomNumber<T>(seed, engine, 1);
+
+			if (chance <= mutation_chance)
+			{
+				float mut_prop = randomNumber<T>(seed, engine, 1);
+
+				if (population[i].getLayersNum() < 3)
+				{
+					int prevLayerNeurons = population[i].getLayers()[0].getNeuronsNum();
+					population[i].addLayer(prevLayerNeurons, maxWeight, minWeight, seed);
+				}
+				else
+				{
+					if(mut_prop <= 0.16)
+					{
+						int prevLayerNeurons = population[i].getLayers()[0].getNeuronsNum();
+						population[i].addLayer(prevLayerNeurons, maxWeight, minWeight, seed);
+					}
+					else if(mut_prop > 0.16 and mut_prop <= 0.33)
+					{
+						int maxLayers = population[i].getLayersNum();
+						int layer = randomNumber<T>(seed, engine, maxLayers - 1, 1);
+						population[i].delLayer(layer, maxWeight, minWeight, seed);
+					}
+					else if(mut_prop > 0.33 and mut_prop <= 0.66)
+					{
+						int maxLayers = population[i].getLayersNum();
+						int layer = randomNumber<T>(seed, engine, maxLayers - 1, 1);
+						population[i].addNeuron(layer, maxWeight, minWeight, seed);
+					}
+					else if(mut_prop > 0.66)
+					{
+						int maxLayers = population[i].getLayersNum();
+						int layer = randomNumber<T>(seed, engine, maxLayers - 1, 1);
+						population[i].delNeuron(layer, maxWeight, minWeight, seed);
+					}
+				}
+			}
+		}
+	}
+
+	void fileOutput(std::string fileName)
+	{
+		//.........
+	}
+
+};

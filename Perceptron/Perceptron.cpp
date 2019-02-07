@@ -614,7 +614,7 @@ public:
 
 	expArray<AdjMatrix<T>> getMatrixes() { return arrMatrixes; }
 
-	Layer<T>** getLayers() { return arrLayers.getArr(); }
+	Layer<T>* getLayers() { return arrLayers.getArr(); }
 
 	int getMatrixesNum() { return matrixes; }
 

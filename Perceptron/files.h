@@ -2,11 +2,10 @@
 #include<string>
 
 template<typename T>
-void setrandomWeights(std::string inFileName, std::string outFileName, int seed, T maxWeight, T minWeight = 0)
+void setrandomWeights(std::string inFileName, std::string outFileName, std::default_random_engine engine, int seed, T maxWeight, T minWeight = 0)
 {
 	std::ifstream inFile(inFileName);
 	std::ofstream outFile(outFileName);
-	static std::default_random_engine engine;
 	int layers;
 	inFile >> layers;
 
