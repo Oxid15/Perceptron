@@ -86,14 +86,10 @@ T mean(T* arr, int n) { return sum<T>(arr, n) / n; }
 template<typename T>
 T* normalizeVect(T* vect, int size)
 {
-	T norm = 0;
+	T norm = euclidNorm<T>(vect, size);
 	for (int i = 0; i < size; i++)
 	{
-		norm = euclidNorm(vect);
-		for (int j = 0; j < size; j++)
-		{
-			vect[j] /= norm;
-		}
+		vect[i] /= norm;
 	}
 	return vect;
 }

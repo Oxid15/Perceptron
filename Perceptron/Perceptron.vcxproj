@@ -121,7 +121,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="currentConfig.txt" />
-    <Text Include="test.txt" />
+    <Text Include="test.csv" />
     <Text Include="testConfig.txt" />
   </ItemGroup>
   <ItemGroup>

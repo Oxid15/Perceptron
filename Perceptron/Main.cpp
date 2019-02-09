@@ -1,8 +1,7 @@
 #include<iostream>
 #include"Evolution.h"
 
-void main()
+int main()
 {
-	Population<float> p(2,1,1);
-	p.mutation(0.3);
+	return 0;
 }

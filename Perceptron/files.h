@@ -78,3 +78,18 @@ void writeStrCsv(std::fstream& file, T* str, int length)
 	}
 	file << "\n";
 }
+
+template<typename T>
+void normCsv(std::fstream& inFile, std::fstream& outFile, int strLen, int fileSize)
+{
+	for (int i = 0; i < fileSize; i++)
+	{
+		T* str = new T[strLen];
+		str = readStrCsv<T>(inFile, strLen);
+		str = normalizeVect<T>(str, strLen);
+
+		writeStrCsv<T>(outFile, str, strLen);
+
+		delete str;
+	}
+}

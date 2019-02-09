@@ -38,10 +38,8 @@ class Population
 {
 	NeuralNet<T>* population;
 	int size;
-
-	int inputSize;			 //?
-	int outputSize;			 //?
-
+	int inputSize;			 
+	int outputSize;			 
 	std::default_random_engine engine;
 
 public:
