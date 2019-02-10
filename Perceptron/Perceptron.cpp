@@ -36,6 +36,8 @@ public:
 		in = new T[prevNum];
 	}
 
+	~Neuron() {	delete in; }
+
 	T process(T* _in, T* weights, functionType type)
 	{
 		in = _in;
@@ -74,7 +76,11 @@ public:
 	{
 		length = 1;
 		height = 1;
-		arr = new T*;
+		arr = new T*[length];
+		for (int i = 0; i < length; i++)
+		{
+			arr[i] = new T[height];
+		}
 	}
 
 	AdjMatrix(int _length, int _height, int seed, T maxWeight, T minWeight)
@@ -118,6 +124,15 @@ public:
 				k++;
 			}
 		}
+	}
+
+	~AdjMatrix() 
+	{
+		for (int i = 0; i < length; i++)
+		{
+			delete arr[i];
+		}
+		delete arr;
 	}
 
 	void fileOutput(std::ofstream& file)
@@ -215,6 +230,13 @@ public:
 
 		for (int i = 0; i < neurons; i++)
 			arr.add(*new Neuron<T>(prevNum, _nextNum, biases[i]));
+	}
+
+	~Layer()
+	{
+		delete input;
+		delete output;
+		delete error;
 	}
 
 	T* process(T* _input)
@@ -392,6 +414,8 @@ public:
 
 		initialize(layers, matrixes, type, neurons, biases, weights);
 	}
+
+	~NeuralNet() {	delete net_out;	}
 
 	void initialize(int _layers, int _matrixes, functionType _type, int* neurons, T** biases, T** weights)
 	{

@@ -128,15 +128,15 @@ public:
 
 	expArray()
 	{
-		arr = new T[2];
 		size = 2;
+		arr = new T[size];
 		cursor = 0;
 	}
 
 	expArray(T* data, int _size)
 	{
-		arr = new T[2];
 		size = 2;
+		arr = new T[size];
 		cursor = 0;
 
 		for (int i = 0; i < _size; i++)
@@ -144,6 +144,8 @@ public:
 			this->add(data[i]);
 		}
 	}
+
+	~expArray() { delete arr; }
 
 	void add(T data)
 	{
