@@ -1,6 +1,58 @@
 #include<fstream>
 #include<string>
 
+class FileName
+{
+	std::string name;
+	std::string extension;
+	int nameLen;
+	int extLen;
+
+public:
+
+	FileName( std::string fileName)
+	{
+		char c = NULL;
+		int i = 0;
+		while (c != '.')
+		{
+			c = fileName[i];
+			if (c != '.')
+				name += fileName[i];
+			i++;
+		}
+		nameLen = i - 1;
+
+		int j = 0;
+		while (c != '\0')
+		{
+			extension += fileName[i];
+			c = fileName[i];
+			i++;
+			j++;
+		}
+		extLen = j - 1;
+	}
+
+	std::string getName() { return name; }
+
+	std::string getExt() { return extension; }
+
+	std::string getFullStr() { return name + '.' + extension; }
+
+	void setName(std::string _name, int _length) 
+	{ 
+		name = _name;
+		nameLen = _length;
+	}
+
+	void setExt(std::string _extension, int _length) 
+	{ 
+		extension = _extension; 
+		extLen = _length;
+	}
+};
+
 template<typename T>
 void setrandomWeights(std::string inFileName, std::string outFileName, std::default_random_engine engine, int seed, T maxWeight, T minWeight = 0)
 {

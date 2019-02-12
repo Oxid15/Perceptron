@@ -424,7 +424,13 @@ public:
 		net_out = new T[out_len];
 	}
 
-	T validate(std::string dataFileName, std::string resFileName, int size, metrics metric = metrics::accuracy, taskType type = taskType::bin_classification)
+	T validate(	
+				std::string dataFileName, 
+				std::string resFileName, 
+				int size, 
+				metrics metric = metrics::accuracy, 
+				taskType type = taskType::bin_classification
+			  )
 	{
 		std::fstream data(dataFileName);
 		std::fstream res(resFileName);
@@ -506,8 +512,15 @@ public:
 		return net_out;
 	}
 
-	void fit(std::string dataFileName, std::string resFileName, int size,
-		int epochs, T speed = 1, metrics metric = metrics::accuracy, taskType type = taskType::bin_classification)
+	void fit(	
+				std::string dataFileName, 
+				std::string resFileName, 
+				int size,
+				int epochs, 
+				T speed = 1, 
+				metrics metric = metrics::accuracy, 
+				taskType type = taskType::bin_classification
+			)
 	{
 		for (int k = 0; k < epochs; k++)
 		{

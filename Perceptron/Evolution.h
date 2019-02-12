@@ -42,6 +42,9 @@ class Population
 	int outputSize;			 
 	std::default_random_engine engine;
 
+	T maxWeight;
+	T minWeight;
+
 public:
 
 	Population()
@@ -50,26 +53,29 @@ public:
 		population = new NeuralNet<T>;
 	}
 
-	Population(int _inputSize, int _outputSize, T maxWeight, T minWeight = 0, int maxLayers = 3, int minLayers = 2,functionType type = sigmoid, int seed = 0, int population_size = 10)
+	Population(int _inputSize, int _outputSize, T _maxWeight, T _minWeight = 0, int population_size = 10, int maxLayers = 3, functionType type = sigmoid, int seed = 0)
 	{
 		size = population_size;
 		inputSize = _inputSize;
 		outputSize = _outputSize;
+		maxWeight = _maxWeight;
+		minWeight = _minWeight;
 
 		population = new NeuralNet<T>[size];
 
 		static std::default_random_engine engine;
 
+		int minLayers = 2;
 		int layers = randomNumber<T>(seed, engine, maxLayers + 1, minLayers);
 		int matrixes = layers - 1;
 		int* neurons = new int[layers];
 
 		neurons[0] = inputSize;
-		neurons[layers - 1] = outputSize;
 		for (int i = 1; i < layers - 1; i++)
 		{
 			neurons[i] = inputSize + int(randomNumber<T>(seed, engine, log(inputSize) + 2));
 		}
+		neurons[layers - 1] = outputSize;
 
 		T** biases = new T*[layers];
 		for (int i = 0; i < layers; i++)
@@ -99,7 +105,7 @@ public:
 		}
 	}
 
-	void mutation(float mutation_chance = 0.05, T maxWeight = 1, T minWeight = 0, int seed = 0)
+	void mutation(float mutation_chance = 0.05, int seed = 0)
 	{
 		for (int i = 0; i < size; i++)
 		{
@@ -125,7 +131,8 @@ public:
 					{
 						int maxLayers = population[i].getLayersNum();
 						int layer = randomNumber<T>(seed, engine, maxLayers - 1, 1);
-						population[i].delLayer(layer, maxWeight, minWeight, seed);
+						if (population[i].getLayersNum() > 1)
+							population[i].delLayer(layer, maxWeight, minWeight, seed);
 					}
 					else if(mut_prop > 0.33 and mut_prop <= 0.66)
 					{
@@ -137,16 +144,20 @@ public:
 					{
 						int maxLayers = population[i].getLayersNum();
 						int layer = randomNumber<T>(seed, engine, maxLayers - 1, 1);
-						population[i].delNeuron(layer, maxWeight, minWeight, seed);
+						if (population[i].getLayers()[layer].getNeuronsNum() > 1)
+							population[i].delNeuron(layer, maxWeight, minWeight, seed);
 					}
 				}
 			}
 		}
 	}
 
-	void fileOutput(std::string fileName)
+	void fileOutput(FileName fileName)
 	{
-		//.........
+		for (int i = 0; i < size; i++)
+		{
+			std::string name = fileName.getName() + "_" + std::to_string(i) + '.' + fileName.getExt();
+			population[i].fileOutput(name);
+		}
 	}
-
 };
