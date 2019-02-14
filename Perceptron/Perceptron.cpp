@@ -36,8 +36,6 @@ public:
 		in = new T[prevNum];
 	}
 
-	~Neuron() {	delete in; }
-
 	T process(T* _in, T* weights, functionType type)
 	{
 		in = _in;
@@ -124,15 +122,6 @@ public:
 				k++;
 			}
 		}
-	}
-
-	~AdjMatrix() 
-	{
-		for (int i = 0; i < length; i++)
-		{
-			delete arr[i];
-		}
-		delete arr;
 	}
 
 	void fileOutput(std::ofstream& file)
@@ -232,13 +221,6 @@ public:
 			arr.add(*new Neuron<T>(prevNum, _nextNum, biases[i]));
 	}
 
-	~Layer()
-	{
-		delete input;
-		delete output;
-		delete error;
-	}
-
 	T* process(T* _input)
 	{
 		input = _input;
@@ -310,7 +292,7 @@ public:
 	int getNeuronsNum() { return neurons; }
 };
 
-template<typename T>
+template<typename T = float>
 class NeuralNet
 {
 	bool empty;
@@ -321,7 +303,8 @@ class NeuralNet
 	functionType type;
 	int out_len;
 	T*net_out;
-	T valEff;
+	T trainEff;
+	T testEff;
 
 	void backpropagation(T* target, T speed)
 	{
@@ -415,8 +398,6 @@ public:
 		initialize(layers, matrixes, type, neurons, biases, weights);
 	}
 
-	~NeuralNet() {	delete net_out;	}
-
 	void initialize(int _layers, int _matrixes, functionType _type, int* neurons, T** biases, T** weights)
 	{
 		layers = _layers;
@@ -427,7 +408,8 @@ public:
 		{
 			if (i == 0)
 			{
-				arrLayers.add(*new Layer<T>(biases[i], 1, neurons[i], neurons[i + 1]), i);
+				Layer<T>* newLayer = new Layer<T>(biases[i], 1, neurons[i], neurons[i + 1]);
+				arrLayers.add(*newLayer, i);
 				continue;
 			}
 
@@ -537,20 +519,25 @@ public:
 	}
 
 	void fit(	
-				std::string dataFileName, 
-				std::string resFileName, 
-				int size,
-				int epochs, 
+				std::string trainDataFName,
+				std::string trainResFName,
+				std::string testDataFName,
+				std::string testResFName,
+				int trainFileSize,
+				int testFileSize,
+				int epochs,
 				T speed = 1, 
 				metrics metric = metrics::accuracy, 
-				taskType type = taskType::bin_classification
+				taskType type = taskType::bin_classification,
+				bool trainValidation = true,
+				bool testValidation = false
 			)
 	{
 		for (int k = 0; k < epochs; k++)
 		{
-			std::fstream data(dataFileName);
-			std::fstream res(resFileName);
-			for (int i = 0; i < size; i++)
+			std::fstream data(trainDataFName);
+			std::fstream res(trainResFName);
+			for (int i = 0; i < trainFileSize; i++)
 			{
 				int length = arrLayers[0]->getNeuronsNum();
 				net_out = process(readStrCsv<T>(data, length));
@@ -560,7 +547,10 @@ public:
 
 				backpropagation(target_out, speed);
 
-				valEff = validate(dataFileName, resFileName, size, metric, type);
+				if (trainValidation)
+					trainEff = validate(trainDataFName, trainResFName, trainFileSize, metric, type);
+				if (testValidation)
+					testEff = validate(testDataFName, testResFName, testFileSize, metric, type);
 			}
 		}
 	}
@@ -657,7 +647,7 @@ public:
 
 	int getLayersNum() { return layers; }
 
-	T getEff() { return valEff; }
+	T getEff() { return trainEff; }
 
 	T* getOutput() { return net_out; }
 

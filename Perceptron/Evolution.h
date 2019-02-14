@@ -45,13 +45,9 @@ class Population
 	T maxWeight;
 	T minWeight;
 
-public:
+	T* results;
 
-	Population()
-	{
-		size = 1;
-		population = new NeuralNet<T>;
-	}
+public:
 
 	Population(int _inputSize, int _outputSize, T _maxWeight, T _minWeight = 0, int population_size = 10, int maxLayers = 3, functionType type = sigmoid, int seed = 0)
 	{
@@ -61,47 +57,50 @@ public:
 		maxWeight = _maxWeight;
 		minWeight = _minWeight;
 
+		results = new T[size];
 		population = new NeuralNet<T>[size];
 
 		static std::default_random_engine engine;
 
 		int minLayers = 2;
-		int layers = randomNumber<T>(seed, engine, maxLayers + 1, minLayers);
-		int matrixes = layers - 1;
-		int* neurons = new int[layers];
-
-		neurons[0] = inputSize;
-		for (int i = 1; i < layers - 1; i++)
-		{
-			neurons[i] = inputSize + int(randomNumber<T>(seed, engine, log(inputSize) + 2));
-		}
-		neurons[layers - 1] = outputSize;
-
-		T** biases = new T*[layers];
-		for (int i = 0; i < layers; i++)
-		{
-			biases[i] = new T[neurons[i]];
-			for (int j = 0; j < neurons[i]; j++)
-			{
-				biases[i][j] = randomNumber<T>(seed, engine, maxWeight, minWeight);
-				seed++;
-			}
-		}
-
-		T** weights = new T*[matrixes];
-		for (int i = 0; i < matrixes; i++)
-		{
-			weights[i] = new T[neurons[i] * neurons[i + 1]];
-			for (int j = 0; j < neurons[i] * neurons[i + 1]; j++)
-			{
-				weights[i][j] = randomNumber<T>(seed, engine, maxWeight, minWeight);
-				seed++;
-			}
-		}
 
 		for (int i = 0; i < population_size; i++)
 		{
-			population[i].initialize(2, 1, type, neurons, biases, weights);
+
+			int layers = randomNumber<T>(seed, engine, maxLayers + 1, minLayers);
+			int matrixes = layers - 1;
+			int* neurons = new int[layers];
+
+			neurons[0] = inputSize;
+			for (int i = 1; i < layers - 1; i++)
+			{
+				neurons[i] = inputSize + int(randomNumber<T>(seed, engine, log(inputSize) + 2));
+			}
+			neurons[layers - 1] = outputSize;
+
+			T** biases = new T*[layers];
+			for (int i = 0; i < layers; i++)
+			{
+				biases[i] = new T[neurons[i]];
+				for (int j = 0; j < neurons[i]; j++)
+				{
+					biases[i][j] = randomNumber<T>(seed, engine, maxWeight, minWeight);
+					seed++;
+				}
+			}
+
+			T** weights = new T*[matrixes];
+			for (int i = 0; i < matrixes; i++)
+			{
+				weights[i] = new T[neurons[i] * neurons[i + 1]];
+				for (int j = 0; j < neurons[i] * neurons[i + 1]; j++)
+				{
+					weights[i][j] = randomNumber<T>(seed, engine, maxWeight, minWeight);
+					seed++;
+				}
+			}
+
+			population[i].initialize(layers, matrixes, type, neurons, biases, weights);
 		}
 	}
 
@@ -151,6 +150,31 @@ public:
 			}
 		}
 	}
+
+	void evaluate(
+				std::string trainDataFName,
+				std::string trainResFName,
+				std::string testDataFName,
+				std::string testResFName,
+				int trainFSize,
+				int testFSize,
+				int epochs,
+				T speed = 1,
+				metrics metric = metrics::accuracy,
+				taskType type = taskType::bin_classification
+				)
+	{
+		for (int i = 0; i < size; i++)
+		{
+			population[i].fit(trainDataFName, trainResFName, testDataFName, testResFName, testFSize, trainFSize, epochs, speed, metric, type, true, false);
+			results[i] = population[i].getEff();
+		}
+	}
+
+	//void select()
+	//{
+	//	
+	//}
 
 	void fileOutput(FileName fileName)
 	{

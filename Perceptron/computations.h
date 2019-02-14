@@ -145,8 +145,6 @@ public:
 		}
 	}
 
-	~expArray() { delete arr; }
-
 	void add(T data)
 	{
 		if (cursor == size)
