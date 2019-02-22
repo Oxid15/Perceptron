@@ -126,7 +126,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="computations.h" />
-    <ClInclude Include="Evolution.h" />
+    <ClInclude Include="Evolution.cpp" />
     <ClInclude Include="files.h" />
   </ItemGroup>
   <ItemGroup>

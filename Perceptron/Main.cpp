@@ -1,5 +1,5 @@
 #include<iostream>
-#include"Evolution.h"
+#include"Evolution.cpp"
 
 int main()
 {
@@ -12,6 +12,7 @@ int main()
 	NeuralNet<> net("testConfig.txt");
 	net.fit("testData.csv", "testResults.csv", "testData.csv", "testResults.csv", 4, 4, 500);
 	std::cout << net.getEff();
+	net.fileOutput("currentConfig.txt");
 	system("pause");
 	return 0;
 }

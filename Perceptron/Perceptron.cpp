@@ -24,6 +24,7 @@ class Neuron
 		case softpls:
 			return softplus(num);
 		}
+		return NULL;
 	}
 
 public:
@@ -231,19 +232,7 @@ public:
 
 	T getWeight(int i, int j) 
 	{ 
-		try
-		{
-			if (i < height && j < length)
-				return arr[i][j];
-			else
-				throw "Access violation!";
-		}
-		catch (char* str)
-		{
-			std::cerr << str << "\n";
-		}
-
-		return 0;
+		return arr[i][j];							 //////////////
 	}
 	int getLength() { return length; }
 	int getHeight() { return height; }
@@ -281,6 +270,13 @@ public:
 
 		for (int i = 0; i < neurons; i++)
 			arr.add(*new Neuron<T>(prevNum, _nextNum, biases[i]));
+	}
+
+	~Layer() 
+	{
+		delete input;
+		delete output;
+		delete error;
 	}
 
 	T* process(T* _input)
@@ -460,6 +456,8 @@ public:
 		initialize(layers, matrixes, type, neurons, biases, weights);
 	}
 
+	~NeuralNet() { delete net_out; }
+
 	void initialize(int _layers, int _matrixes, functionType _type, int* neurons, T** biases, T** weights)
 	{
 		layers = _layers;
@@ -477,10 +475,12 @@ public:
 
 			if (i == layers - 1)
 			{
-				arrLayers.add(*new Layer<T>(biases[i], neurons[i - 1], neurons[i], 1), i);
+				Layer<T>* newLayer = new Layer<T>(biases[i], neurons[i - 1], neurons[i], 1);
+				arrLayers.add(*newLayer, i);
 				continue;
 			}
-			arrLayers.add(*new Layer<T>(biases[i], neurons[i - 1], neurons[i], neurons[i + 1]), i);
+			Layer<T>* newLayer = new Layer<T>(biases[i], neurons[i - 1], neurons[i], neurons[i + 1]);
+			arrLayers.add(*newLayer, i);
 		}
 
 		for (int i = 0; i < matrixes; i++)
@@ -549,7 +549,7 @@ public:
 					right++;
 			}
 			T acc;
-			acc = double(right) / double(all);
+			acc = T(right) / T(all);
 			return acc;
 		}
 		case (metrics::meanEuclidNorm):
@@ -562,6 +562,7 @@ public:
 			return mean<T>(distances, size);
 		}
 		}
+		return NULL;
 	}
 
 	T** dataProcess(std::string fileName, int size)

@@ -49,7 +49,17 @@ class Population
 
 public:
 
-	Population(int _inputSize, int _outputSize, T _maxWeight, T _minWeight = 0, int population_size = 10, int maxLayers = 3, functionType type = sigmoid, int seed = 0)
+	Population
+	(
+		int _inputSize, 
+		int _outputSize, 
+		T _maxWeight, 
+		T _minWeight = 0, 
+		int population_size = 10, 
+		int maxLayers = 3, 
+		functionType type = sigmoid, 
+		int seed = 0
+	)
 	{
 		size = population_size;
 		inputSize = _inputSize;
@@ -168,7 +178,21 @@ public:
 	{
 		for (int i = 0; i < size; i++)
 		{
-			population[i].fit(trainDataFName, trainResFName, testDataFName, testResFName, testFSize, trainFSize, epochs, speed, metric, type, trainValidation, testValidation);
+			population[i].fit
+			(
+				trainDataFName, 
+				trainResFName, 
+				testDataFName, 
+				testResFName, 
+				testFSize, 
+				trainFSize, 
+				epochs, 
+				speed, 
+				metric, 
+				type, 
+				trainValidation, 
+				testValidation
+			);
 			results[i] = population[i].getEff();
 		}
 	}

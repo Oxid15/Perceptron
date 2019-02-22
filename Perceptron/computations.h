@@ -50,6 +50,7 @@ T derivative(functionType type, T num)
 	case softpls:
 		return softplusDerivative(num);
 	}
+	return NULL;
 }
 
 template<typename T>
@@ -160,7 +161,7 @@ public:
 		}
 	}
 
-	void add(T data, int index)
+	void add(T& data, int index)
 	{
 		if (index == size)
 		{
