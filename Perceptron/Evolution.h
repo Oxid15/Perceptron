@@ -161,12 +161,14 @@ public:
 				int epochs,
 				T speed = 1,
 				metrics metric = metrics::accuracy,
-				taskType type = taskType::bin_classification
+				taskType type = taskType::bin_classification,
+				bool trainValidation = true,
+				bool testValidation = false
 				)
 	{
 		for (int i = 0; i < size; i++)
 		{
-			population[i].fit(trainDataFName, trainResFName, testDataFName, testResFName, testFSize, trainFSize, epochs, speed, metric, type, true, false);
+			population[i].fit(trainDataFName, trainResFName, testDataFName, testResFName, testFSize, trainFSize, epochs, speed, metric, type, trainValidation, testValidation);
 			results[i] = population[i].getEff();
 		}
 	}
@@ -184,4 +186,6 @@ public:
 			population[i].fileOutput(name);
 		}
 	}
+
+	T* getResults() { return results; }
 };
