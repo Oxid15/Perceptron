@@ -103,7 +103,7 @@ public:
 		}
 	}
 
-	AdjMatrix(T* weights, int _length = 1, int _height = 1)
+	AdjMatrix(T* weights, int _length, int _height)
 	{
 		length = _length;
 		height = _height;
@@ -137,25 +137,67 @@ public:
 
 	T* getStrWeights(int index)
 	{
-		T* temp = new T[length];
-		for (int i = 0; i < length; i++)
+		try
 		{
-			temp[i] = arr[i][index];
+			if (index < height)
+			{
+				T* temp = new T[length];
+				for (int i = 0; i < length; i++)
+				{
+					temp[i] = arr[i][index];
+				}
+				return temp;
+			}
+			else
+				throw "Access violation!";
 		}
-		return temp;
+
+		catch (char* str)
+		{
+			std::cerr << str << "\n";
+		}
+
+		return nullptr;
 	}
 
 	T* getColWeights(int index)
 	{
-		T* temp = new T[height];
-		for (int i = 0; i < height; i++)
+		try
 		{
-			temp[i] = arr[index][i];
+			if (index < length)
+			{
+				T* temp = new T[height];
+				for (int i = 0; i < height; i++)
+				{
+					temp[i] = arr[index][i];
+				}
+				return temp;
+			}
+			else
+				throw "Access violation!";
 		}
-		return temp;
+		catch (char* str)
+		{
+			std::cerr << str << "\n";
+		}
+
+		return nullptr;
 	}
 
-	void setWeight(int i, int j, T weight) { arr[i][j] = weight; }
+	void setWeight(int i, int j, T weight) 
+	{ 
+		try
+		{
+			if (i < height && j < length)
+				arr[i][j] = weight;
+			else
+				throw "Access violation!";
+		}
+		catch (char* str)
+		{
+			std::cerr << str << "\n";
+		}
+	}
 
 	void setWeights(T* layerError, T* layerInput, T speed)
 	{
@@ -180,9 +222,29 @@ public:
 				arr[j][i] += dWeights[j][i];
 			}
 		}
+
+		for (int i = 0; i < length; i++)
+			delete dWeights[i];
+		delete dWeights;
+
 	}
 
-	T getWeight(int i, int j) { return arr[i][j]; }
+	T getWeight(int i, int j) 
+	{ 
+		try
+		{
+			if (i < height && j < length)
+				return arr[i][j];
+			else
+				throw "Access violation!";
+		}
+		catch (char* str)
+		{
+			std::cerr << str << "\n";
+		}
+
+		return 0;
+	}
 	int getLength() { return length; }
 	int getHeight() { return height; }
 };
