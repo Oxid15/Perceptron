@@ -146,7 +146,7 @@ public:
 		}
 	}
 
-	void add(T data)
+	void add(T& data)
 	{
 		if (cursor == size)
 		{

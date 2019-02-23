@@ -1,354 +1,8 @@
-#include"computations.h"
-#include"files.h"
+#include "Layer.cpp"
 
 enum metrics { accuracy, meanEuclidNorm };
 
 enum taskType { bin_classification, regression };
-
-template<typename T>
-class Neuron
-{
-	T bias;
-	T* in;
-	T out;
-	int prevNum;
-	int nextNum;
-
-	template<typename T>
-	T activation(T num, functionType type)
-	{
-		switch (type)
-		{
-		case sigmoid:
-			return sig(num);
-		case softpls:
-			return softplus(num);
-		}
-		return NULL;
-	}
-
-public:
-
-	Neuron(int _prevNum = 1, int _nextNum = 1, T _bias = 0)
-	{
-		bias = _bias;
-		prevNum = _prevNum;
-		nextNum = _nextNum;
-		in = new T[prevNum];
-	}
-
-	T process(T* _in, T* weights, functionType type)
-	{
-		in = _in;
-		out = activation(weighedSum(in, weights, prevNum) + bias, type);
-		return out;
-	}
-
-	T process(T in)
-	{
-		out = in;
-		return out;
-	}
-
-	void addToBias(T error, T speed) { bias += speed * error; }
-
-	void setBias(T _bias) { bias = _bias; }
-
-	T getBias() { return bias; }
-
-	T getOutput() { return out; }
-
-	int getNextNum() { return nextNum; }
-
-	int getPrevNum() { return prevNum; }
-};
-
-template<typename T>
-class AdjMatrix
-{
-	T** arr;
-	int length;
-	int height;
-
-public:
-	AdjMatrix()
-	{
-		length = 1;
-		height = 1;
-		arr = new T*[length];
-		for (int i = 0; i < length; i++)
-		{
-			arr[i] = new T[height];
-		}
-	}
-
-	AdjMatrix(int _length, int _height, int seed, T maxWeight, T minWeight)
-	{
-		length = _length;
-		height = _height;
-		arr = new T*[length];
-		for (int i = 0; i < length; i++)
-		{
-			arr[i] = new T[height];
-		}
-
-		int k = 0;
-		std::default_random_engine engine;
-		for (int i = 0; i < height; i++)
-		{
-			for (int j = 0; j < length; j++)
-			{
-				arr[j][i] = randomNumber<T>(seed, engine, maxWeight, minWeight);
-				k++;
-			}
-		}
-	}
-
-	AdjMatrix(T* weights, int _length, int _height)
-	{
-		length = _length;
-		height = _height;
-		arr = new T*[length];
-		for (int i = 0; i < length; i++)
-		{
-			arr[i] = new T[height];
-		}
-
-		int k = 0;
-		for (int i = 0; i < height; i++)
-		{
-			for (int j = 0; j < length; j++)
-			{
-				arr[j][i] = weights[k];
-				k++;
-			}
-		}
-	}
-
-	void fileOutput(std::ofstream& file)
-	{
-		for (int i = 0; i < height; i++)
-		{
-			for (int j = 0; j < length; j++)
-			{
-				file << arr[j][i] << ";";
-			}
-		}
-	}
-
-	T* getStrWeights(int index)
-	{
-		try
-		{
-			if (index < height)
-			{
-				T* temp = new T[length];
-				for (int i = 0; i < length; i++)
-				{
-					temp[i] = arr[i][index];
-				}
-				return temp;
-			}
-			else
-				throw "Access violation!";
-		}
-
-		catch (char* str)
-		{
-			std::cerr << str << "\n";
-		}
-
-		return nullptr;
-	}
-
-	T* getColWeights(int index)
-	{
-		try
-		{
-			if (index < length)
-			{
-				T* temp = new T[height];
-				for (int i = 0; i < height; i++)
-				{
-					temp[i] = arr[index][i];
-				}
-				return temp;
-			}
-			else
-				throw "Access violation!";
-		}
-		catch (char* str)
-		{
-			std::cerr << str << "\n";
-		}
-
-		return nullptr;
-	}
-
-	void setWeight(int i, int j, T weight) 
-	{ 
-		try
-		{
-			if (i < height && j < length)
-				arr[i][j] = weight;
-			else
-				throw "Access violation!";
-		}
-		catch (char* str)
-		{
-			std::cerr << str << "\n";
-		}
-	}
-
-	void setWeights(T* layerError, T* layerInput, T speed)
-	{
-		T** dWeights = new T*[length];
-		for (int i = 0; i < length; i++)
-		{
-			dWeights[i] = new T[height];
-		}
-
-		for (int i = 0; i < height; i++)
-		{
-			for (int j = 0; j < length; j++)
-			{
-				dWeights[j][i] = (speed * layerInput[i] * layerError[j]);
-			}
-		}
-
-		for (int i = 0; i < height; i++)
-		{
-			for (int j = 0; j < length; j++)
-			{
-				arr[j][i] += dWeights[j][i];
-			}
-		}
-
-		for (int i = 0; i < length; i++)
-			delete dWeights[i];
-		delete dWeights;
-
-	}
-
-	T getWeight(int i, int j) 
-	{ 
-		return arr[i][j];							 //////////////
-	}
-	int getLength() { return length; }
-	int getHeight() { return height; }
-};
-
-template<typename T>
-class Layer
-{
-	expArray<Neuron<T>> arr;
-	T* input;
-	T* output;
-	T* error;
-	int neurons;
-	int prevNum;
-	int nextNum;
-public:
-	Layer()
-	{
-		input = new T;
-		output = new T;
-		error = new T;
-		neurons = 1;
-		prevNum = 1;
-		nextNum = 1;
-	}
-
-	Layer(T* biases, int _prevNum = 1, int _neuronsNum = 1, int _nextNum = 1)
-	{
-		neurons = _neuronsNum;
-		prevNum = _prevNum;
-		nextNum = _nextNum;
-		input = new T[prevNum];
-		output = new T[neurons];
-		error = new T[neurons];
-
-		for (int i = 0; i < neurons; i++)
-			arr.add(*new Neuron<T>(prevNum, _nextNum, biases[i]));
-	}
-
-	~Layer() 
-	{
-		delete input;
-		delete output;
-		delete error;
-	}
-
-	T* process(T* _input)
-	{
-		input = _input;
-		for (int i = 0; i < neurons; i++)
-		{
-			output[i] = arr[i]->process(_input[i]);
-		}
-		return output;
-	}
-
-	T* process(T* _input, AdjMatrix<T>* matrix, functionType type)
-	{
-		input = _input;
-		for (int i = 0; i < neurons; i++)
-		{
-			output[i] = arr[i]->process(_input, matrix->getColWeights(i), type);
-		}
-		return output;
-	}
-
-	void setError(T* target, AdjMatrix<T>* matrix, functionType funcType)
-	{
-		for (int i = 0; i < neurons; i++)
-		{
-			error[i] = (target[i] - output[i]) *
-				derivative<T>(funcType, weighedSum<T>(input, matrix->getColWeights(i), prevNum) + arr[i]->getBias());
-		}
-
-	}
-
-	void setError(T* errors, AdjMatrix<T>* thisMatrix, AdjMatrix<T>* prevMatrix, functionType funcType)
-	{
-		for (int i = 0; i < neurons; i++)
-		{
-			error[i] = (weighedSum(errors, thisMatrix->getStrWeights(i), arr[i]->getNextNum())) *
-				(derivative<T>(funcType, weighedSum<T>(input, prevMatrix->getColWeights(i), prevNum) + arr[i]->getBias()));
-		}
-	}
-
-	void setNeurons(int _neurons) { neurons = _neurons; }
-
-	void add()
-	{
-		Neuron<T>* neuron = new Neuron<T>(prevNum, nextNum, 0);
-		arr.add(*neuron);
-		neurons++;
-	}
-
-	void del(int index)
-	{
-		arr.del(index);
-		neurons--;
-	}
-
-	T* getInput() { return input; }
-
-	T* getOutput() { return output; }
-
-	T* getError() { return error; }
-
-	T getError(int index) { return error[index]; }
-
-	expArray<Neuron<T>> getNeurons() { return arr; }
-
-	int getNextNum() { return nextNum; }
-
-	int getPrevNum() { return prevNum; }
-
-	int getNeuronsNum() { return neurons; }
-};
 
 template<typename T = float>
 class NeuralNet
@@ -357,7 +11,7 @@ class NeuralNet
 	int layers;
 	int matrixes;
 	expArray<Layer<T>> arrLayers;
-	expArray<AdjMatrix<T>> arrMatrixes;
+	expArray<Matrix<T>> arrMatrixes;
 	functionType type;
 	int out_len;
 	T*net_out;
@@ -485,20 +139,20 @@ public:
 
 		for (int i = 0; i < matrixes; i++)
 		{
-			arrMatrixes.add(*new AdjMatrix<T>(weights[i], neurons[i + 1], neurons[i]), i);
+			arrMatrixes.add(*new Matrix<T>(weights[i], neurons[i + 1], neurons[i]), i);
 		}
 
 		out_len = arrLayers[layers - 1]->getNeuronsNum();
 		net_out = new T[out_len];
 	}
 
-	T validate(	
-				std::string dataFileName, 
-				std::string resFileName, 
-				int size, 
-				metrics metric = metrics::accuracy, 
-				taskType type = taskType::bin_classification
-			  )
+	T validate(
+		std::string dataFileName,
+		std::string resFileName,
+		int size,
+		metrics metric = metrics::accuracy,
+		taskType type = taskType::bin_classification
+	)
 	{
 		std::fstream data(dataFileName);
 		std::fstream res(resFileName);
@@ -581,20 +235,20 @@ public:
 		return net_out;
 	}
 
-	void fit(	
-				std::string trainDataFName,
-				std::string trainResFName,
-				std::string testDataFName,
-				std::string testResFName,
-				int trainFileSize,
-				int testFileSize,
-				int epochs,
-				T speed = 1, 
-				metrics metric = metrics::accuracy, 
-				taskType type = taskType::bin_classification,
-				bool trainValidation = true,
-				bool testValidation = false
-			)
+	void fit(
+		std::string trainDataFName,
+		std::string trainResFName,
+		std::string testDataFName,
+		std::string testResFName,
+		int trainFileSize,
+		int testFileSize,
+		int epochs,
+		T speed = 1,
+		metrics metric = metrics::accuracy,
+		taskType type = taskType::bin_classification,
+		bool trainValidation = true,
+		bool testValidation = false
+	)
 	{
 		for (int k = 0; k < epochs; k++)
 		{
@@ -633,8 +287,8 @@ public:
 		arrMatrixes.del(matrixes - 1);
 		matrixes--;
 
-		AdjMatrix<T>* matrix1 = new AdjMatrix<T>(neurons, prevNum, seed, maxWeight, minWeight);
-		AdjMatrix<T>* matrix2 = new AdjMatrix<T>(nextNum, neurons, seed, maxWeight, minWeight);
+		Matrix<T>* matrix1 = new Matrix<T>(neurons, prevNum, seed, maxWeight, minWeight);
+		Matrix<T>* matrix2 = new Matrix<T>(nextNum, neurons, seed, maxWeight, minWeight);
 		arrMatrixes.add(*matrix1);
 		arrMatrixes.add(*matrix2);
 		matrixes += 2;
@@ -653,8 +307,8 @@ public:
 			arrMatrixes.del(layer);
 			arrMatrixes.del(layer - 1);
 
-			AdjMatrix<T>* matrix1 = new AdjMatrix<T>(neurons + 1, prevNum, seed, maxWeight, minWeight);
-			AdjMatrix<T>* matrix2 = new AdjMatrix<T>(nextNum, neurons + 1, seed, maxWeight, minWeight);
+			Matrix<T>* matrix1 = new Matrix<T>(neurons + 1, prevNum, seed, maxWeight, minWeight);
+			Matrix<T>* matrix2 = new Matrix<T>(nextNum, neurons + 1, seed, maxWeight, minWeight);
 
 			arrMatrixes.add(*matrix1);
 			arrMatrixes.add(*matrix2);
@@ -675,7 +329,7 @@ public:
 			arrMatrixes.del(matrixes - 2);
 			matrixes -= 2;
 
-			AdjMatrix<T>* matrix = new AdjMatrix<T>(nextNum, prevNum, seed, maxWeight, minWeight);
+			Matrix<T>* matrix = new Matrix<T>(nextNum, prevNum, seed, maxWeight, minWeight);
 			arrMatrixes.add(*matrix);
 			matrixes++;
 		}
@@ -694,15 +348,15 @@ public:
 			arrMatrixes.del(layer);
 			arrMatrixes.del(layer - 1);
 
-			AdjMatrix<T>* matrix1 = new AdjMatrix<T>(neurons - 1, prevNum, seed, maxWeight, minWeight);
-			AdjMatrix<T>* matrix2 = new AdjMatrix<T>(nextNum, neurons - 1, seed, maxWeight, minWeight);
+			Matrix<T>* matrix1 = new Matrix<T>(neurons - 1, prevNum, seed, maxWeight, minWeight);
+			Matrix<T>* matrix2 = new Matrix<T>(nextNum, neurons - 1, seed, maxWeight, minWeight);
 
 			arrMatrixes.add(*matrix1);
 			arrMatrixes.add(*matrix2);
 		}
 	}
 
-	expArray<AdjMatrix<T>> getMatrixes() { return arrMatrixes; }
+	expArray<Matrix<T>> getMatrixes() { return arrMatrixes; }
 
 	Layer<T>* getLayers() { return arrLayers.getArr(); }
 

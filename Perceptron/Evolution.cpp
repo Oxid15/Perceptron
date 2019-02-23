@@ -1,4 +1,4 @@
-#include"Perceptron.cpp"
+#include"NeuralNet.cpp"
 
 template<typename T>
 void setrandomWeights(NeuralNet<T>& net, std::default_random_engine engine, int seed, T maxWeight, T minWeight = 0)
