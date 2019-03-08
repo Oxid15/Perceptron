@@ -32,6 +32,8 @@ public:
 		in = new T[prevNum];
 	}
 
+	~Neuron() { delete in; }
+
 	T process(T* _in, T* weights, functionType type)
 	{
 		in = _in;

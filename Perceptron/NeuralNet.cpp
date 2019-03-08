@@ -70,14 +70,7 @@ public:
 
 		int _type;
 		configFile >> _type;
-		switch (_type)
-		{
-		case 0:
-			type = sigmoid;
-			break;
-		case 1:
-			type = softpls;
-		}
+		type = functionType(_type);
 
 		empty = false;
 
@@ -373,14 +366,8 @@ public:
 		std::ofstream file(fileName);
 		file << layers << "\n";
 
-		switch (type)
-		{
-		case sigmoid:
-			file << "0\n";
-			break;
-		case softpls:
-			file << "3\n";
-		}
+		int i = int(type);
+		file << i << "\n";
 
 		for (int i = 0; i < layers; i++)
 		{
@@ -394,8 +381,8 @@ public:
 		{
 			for (int j = 0; j < arrLayers[i]->getNeuronsNum(); j++)
 			{
-				Neuron<T> tmp = *arrLayers[i]->getNeurons()[j];
-				file << std::to_string(tmp.getBias()) << " ";
+				Neuron<T>* tmp = arrLayers[i]->getNeurons()[j];
+				file << std::to_string(tmp->getBias()) << " ";
 			}
 			file << "\n";
 		}

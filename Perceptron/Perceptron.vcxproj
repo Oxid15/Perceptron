@@ -123,9 +123,9 @@
     <ClCompile Include="Neuron.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="currentConfig.txt" />
+    <Text Include="currentConfig.nn" />
     <Text Include="test.csv" />
-    <Text Include="testConfig.txt" />
+    <Text Include="testConfig.nn" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="computations.h" />

@@ -2,7 +2,7 @@
 #include<time.h>
 #include<random>
 
-enum functionType { sigmoid, softpls };
+enum functionType { sigmoid, softpls, th};
 
 template<typename T>
 T randomNumber(int seed, std::default_random_engine& engine, int max, int min = 0)
@@ -22,6 +22,19 @@ T* elemPow(T* vect, int size, int power)
 		arr[i] = pow(vect[i], power);
 	}
 	return arr;
+}
+
+template<typename T>
+T tanh(T num) 
+{
+	T ex = exp(2 * num);
+	return (ex - 1)/(ex + 1); 
+}
+
+template<typename T>
+T sech(T num) 
+{
+	return 2 / (exp(-num) + exp(num));
 }
 
 template<typename T>
@@ -49,6 +62,8 @@ T derivative(functionType type, T num)
 		return sigDerivative(num);
 	case softpls:
 		return softplusDerivative(num);
+	case th:
+		return pow(sech(num), 2);
 	}
 	return NULL;
 }
