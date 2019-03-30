@@ -14,6 +14,14 @@ T randomNumber(int seed, std::default_random_engine& engine, int max, int min = 
 }
 
 template<typename T>
+void swap(T& left, T& right)
+{
+	T tmp = left;
+	left = right;
+	right = tmp;
+}
+
+template<typename T>
 T* elemPow(T* vect, int size, int power)
 {
 	for (int i = 0; i < size; i++)
@@ -67,11 +75,23 @@ T derivative(functionType ftype, T num)
 	return NULL;
 }
 
-//template<typename T>
-//void sort(T* arr, int size)
-//{
-//
-//}
+template<typename T>
+void insertionSort(T* arr, int size)
+{
+	T key = 0;
+	int i = 0;
+	for (int j = 1; j < size; j++) 
+	{
+		key = arr[j];
+		i = j - 1;
+		while (i >= 0 && arr[i] > key) 
+		{
+			arr[i + 1] = arr[i];
+			i = i - 1;
+			arr[i + 1] = key;
+		}
+	}
+}
 
 template<typename T>
 T sum(T* arr, int n)
@@ -126,6 +146,36 @@ T weighedSum(T* in, T* weights, int size)
 		sum += in[i] * weights[i];
 	}
 	return sum;
+}
+
+//returns the integer array where numbers is the quantity of values that is satisfying intervals
+template<typename T>
+void computeFrequencies(int* freq, T* arr, int size, int numOfIntervals)
+{
+	insertionSort<T>(arr, size);
+
+	T max = arr[size - 1];
+	T min = arr[0];
+
+	T length = max - min;
+	T dx = length / numOfIntervals;
+
+	for (int i = 0; i < numOfIntervals; i++)
+		freq[i] = 0;
+
+	int bound = 0;
+	T interval = 0;
+	for (int i = 0; i < numOfIntervals; i++)
+	{
+		for (int j = bound; j < size; j++)
+		{
+			if (arr[j] >= interval && arr[j] < interval + dx)
+			{
+				freq[i]++;
+				bound++;
+			}
+		}
+	}
 }
 
 template<typename T>
