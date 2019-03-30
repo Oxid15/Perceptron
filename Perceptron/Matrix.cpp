@@ -89,6 +89,7 @@ public:
 		{
 			if (index < height)
 			{
+				//this is convenient, but may cause memory overflow
 				T* temp = new T[length];
 				for (int i = 0; i < length; i++)
 				{
@@ -114,6 +115,7 @@ public:
 		{
 			if (index < length)
 			{
+				//same
 				T* temp = new T[height];
 				for (int i = 0; i < height; i++)
 				{
@@ -174,7 +176,6 @@ public:
 		for (int i = 0; i < length; i++)
 			delete dWeights[i];
 		delete dWeights;
-
 	}
 
 	T getWeight(int i, int j)

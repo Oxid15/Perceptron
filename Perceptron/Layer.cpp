@@ -51,32 +51,32 @@ public:
 		return output;
 	}
 
-	T* process(T* _input, Matrix<T>* matrix, functionType type)
+	T* process(T* _input, Matrix<T>* matrix, functionType ftype)
 	{
 		input = _input;
 		for (int i = 0; i < neurons; i++)
 		{
-			output[i] = arr[i]->process(_input, matrix->getColWeights(i), type);
+			output[i] = arr[i]->process(_input, matrix->getColWeights(i), ftype);
 		}
 		return output;
 	}
 
-	void setError(T* target, Matrix<T>* matrix, functionType funcType)
+	void setError(T* target, Matrix<T>* matrix, functionType ftype)
 	{
 		for (int i = 0; i < neurons; i++)
 		{
 			error[i] = (target[i] - output[i]) *
-				derivative<T>(funcType, weighedSum<T>(input, matrix->getColWeights(i), prevNum) + arr[i]->getBias());
+				derivative<T>(ftype, weighedSum<T>(input, matrix->getColWeights(i), prevNum) + arr[i]->getBias());
 		}
 
 	}
 
-	void setError(T* errors, Matrix<T>* thisMatrix, Matrix<T>* prevMatrix, functionType funcType)
+	void setError(T* errors, Matrix<T>* thisMatrix, Matrix<T>* prevMatrix, functionType ftype)
 	{
 		for (int i = 0; i < neurons; i++)
 		{
 			error[i] = (weighedSum(errors, thisMatrix->getStrWeights(i), arr[i]->getNextNum())) *
-				(derivative<T>(funcType, weighedSum<T>(input, prevMatrix->getColWeights(i), prevNum) + arr[i]->getBias()));
+				(derivative<T>(ftype, weighedSum<T>(input, prevMatrix->getColWeights(i), prevNum) + arr[i]->getBias()));
 		}
 	}
 

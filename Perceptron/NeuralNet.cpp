@@ -4,34 +4,34 @@ enum metrics { accuracy, meanEuclidNorm };
 
 enum taskType { bin_classification, regression };
 
-template<typename T = float>
+template<typename T = double>
 class NeuralNet
 {
-	bool empty;
-	int layers;
-	int matrixes;
+	bool isEmpty;
+	int layersNum;
+	int matrixesNum;
 	expArray<Layer<T>> arrLayers;
 	expArray<Matrix<T>> arrMatrixes;
-	functionType type;
-	int out_len;
-	T*net_out;
+	functionType ftype;
+	int outputLen;
+	T* net_out;
 	T trainEff;
 	T testEff;
 
-	void backpropagation(T* target, T speed)
+	void backpropagation(T* targetOutput, T speed)
 	{
-		arrLayers[layers - 1]->setError(target, arrMatrixes[layers - 2], type);
-		for (int i = layers - 2; i > 0; i--)
+		arrLayers[layersNum - 1]->setError(targetOutput, arrMatrixes[layersNum - 2], ftype);
+		for (int i = layersNum - 2; i > 0; i--)
 		{
-			arrLayers[i]->setError(arrLayers[i + 1]->getError(), arrMatrixes[i], arrMatrixes[i - 1], type);
+			arrLayers[i]->setError(arrLayers[i + 1]->getError(), arrMatrixes[i], arrMatrixes[i - 1], ftype);
 		}
 
-		for (int i = 0; i < matrixes; i++)
+		for (int i = 0; i < matrixesNum; i++)
 		{
 			arrMatrixes[i]->setWeights(arrLayers[i + 1]->getError(), arrLayers[i + 1]->getInput(), speed);
 		}
 
-		for (int i = 1; i < layers; i++)
+		for (int i = 1; i < layersNum; i++)
 		{
 			for (int j = 0; j < arrLayers[i]->getNeuronsNum(); j++)
 			{
@@ -43,45 +43,45 @@ class NeuralNet
 	T* process(T* input)
 	{
 		arrLayers[0]->process(input);
-		for (int i = 1; i < layers; i++)
+		for (int i = 1; i < layersNum; i++)
 		{
-			arrLayers[i]->process(arrLayers[i - 1]->getOutput(), arrMatrixes[i - 1], type);
+			arrLayers[i]->process(arrLayers[i - 1]->getOutput(), arrMatrixes[i - 1], ftype);
 		}
-		return arrLayers[layers - 1]->getOutput();
+		return arrLayers[layersNum - 1]->getOutput();
 	}
 
 public:
 
 	NeuralNet()
 	{
-		layers = 2;
-		matrixes = 1;
-		type = sigmoid;
-		empty = true;
-		out_len = 1;
+		layersNum = 2;
+		matrixesNum = 1;
+		ftype = sigmoid;
+		isEmpty = true;
+		outputLen = 1;
 		net_out = new T;
 	}
 
 	NeuralNet(std::string fileName)
 	{
 		std::ifstream configFile(fileName);
-		configFile >> layers;
-		matrixes = layers - 1;
+		configFile >> layersNum;
+		matrixesNum = layersNum - 1;
 
-		int _type;
-		configFile >> _type;
-		type = functionType(_type);
+		int _ftype;
+		configFile >> _ftype;
+		ftype = functionType(_ftype);
 
-		empty = false;
+		isEmpty = false;
 
-		int* neurons = new int[layers];
-		for (int i = 0; i < layers; i++)
+		int* neurons = new int[layersNum];
+		for (int i = 0; i < layersNum; i++)
 		{
 			configFile >> neurons[i];
 		}
 
-		T** biases = new T*[layers];
-		for (int i = 0; i < layers; i++)
+		T** biases = new T*[layersNum];
+		for (int i = 0; i < layersNum; i++)
 		{
 			biases[i] = new T[neurons[i]];
 			for (int j = 0; j < neurons[i]; j++)
@@ -90,8 +90,8 @@ public:
 			}
 		}
 
-		T** weights = new T*[matrixes];
-		for (int i = 0; i < matrixes; i++)
+		T** weights = new T*[matrixesNum];
+		for (int i = 0; i < matrixesNum; i++)
 		{
 			weights[i] = new T[neurons[i] * neurons[i + 1]];
 			for (int j = 0; j < neurons[i] * neurons[i + 1]; j++)
@@ -100,18 +100,18 @@ public:
 			}
 		}
 
-		initialize(layers, matrixes, type, neurons, biases, weights);
+		initialize(layersNum, matrixesNum, ftype, neurons, biases, weights);
 	}
 
 	~NeuralNet() { delete net_out; }
 
-	void initialize(int _layers, int _matrixes, functionType _type, int* neurons, T** biases, T** weights)
+	void initialize(int _layersNum, int _matrixesNum, functionType _ftype, int* neurons, T** biases, T** weights)
 	{
-		layers = _layers;
-		matrixes = _matrixes;
-		type = _type;
+		layersNum = _layersNum;
+		matrixesNum = _matrixesNum;
+		ftype = _ftype;
 
-		for (int i = 0; i < layers; i++)
+		for (int i = 0; i < layersNum; i++)
 		{
 			if (i == 0)
 			{
@@ -120,7 +120,7 @@ public:
 				continue;
 			}
 
-			if (i == layers - 1)
+			if (i == layersNum - 1)
 			{
 				Layer<T>* newLayer = new Layer<T>(biases[i], neurons[i - 1], neurons[i], 1);
 				arrLayers.add(*newLayer, i);
@@ -130,13 +130,13 @@ public:
 			arrLayers.add(*newLayer, i);
 		}
 
-		for (int i = 0; i < matrixes; i++)
+		for (int i = 0; i < matrixesNum; i++)
 		{
 			arrMatrixes.add(*new Matrix<T>(weights[i], neurons[i + 1], neurons[i]), i);
 		}
 
-		out_len = arrLayers[layers - 1]->getNeuronsNum();
-		net_out = new T[out_len];
+		outputLen = arrLayers[layersNum - 1]->getNeuronsNum();
+		net_out = new T[outputLen];
 	}
 
 	T validate(
@@ -152,29 +152,30 @@ public:
 
 		T** output = new T*[size];
 		for (int i = 0; i < size; i++)
-			output[i] = new T[out_len];
+			output[i] = new T[outputLen];
 
 		T** target_out = new T*[size];
 		for (int i = 0; i < size; i++)
-			target_out[i] = new T[out_len];
+			target_out[i] = new T[outputLen];
 
 		for (int i = 0; i < size; i++)
 		{
 			int length = arrLayers[0]->getNeuronsNum();
-			T* out = new T[out_len];
+			T* out = new T[outputLen];
 			out = process(readStrCsv<T>(data, length));
 
-			for (int j = 0; j < out_len; j++)
+			for (int j = 0; j < outputLen; j++)
 			{
 				output[i][j] = out[j];
 			}
 
-			target_out[i] = readStrCsv<T>(res, out_len);
+			target_out[i] = readStrCsv<T>(res, outputLen);
 
 			switch (type)
 			{
-			case(taskType::bin_classification):
+			case(taskType::bin_classification):			
 			{
+				//really need to review this block
 				if (output[i][0] >= 0.5)
 					output[i][0] = 1;
 				else
@@ -188,23 +189,21 @@ public:
 		case (metrics::accuracy):
 		{
 			int right = 0;
-			int all = size;
-
 			for (int i = 0; i < size; i++)
 			{
 				if (output[i][0] == target_out[i][0])
 					right++;
 			}
-			T acc;
-			acc = T(right) / T(all);
-			return acc;
+
+			int all = size;
+			return T(right) / T(all);
 		}
 		case (metrics::meanEuclidNorm):
 		{
 			T* distances = new T[size];
 			for (int i = 0; i < size; i++)
 			{
-				distances[i] = euclidNorm<T>(target_out[i], output[i], out_len);
+				distances[i] = euclidNorm<T>(target_out[i], output[i], outputLen);
 			}
 			return mean<T>(distances, size);
 		}
@@ -215,9 +214,9 @@ public:
 	T** dataProcess(std::string fileName, int size)
 	{
 		std::fstream set(fileName);
-		int out_len = arrLayers[layers - 1]->getNeuronsNum();
-		T** net_out = new T*[out_len];
-		for (int i = 0; i < out_len; i++)
+		int outputLen = arrLayers[layersNum - 1]->getNeuronsNum();
+		T** net_out = new T*[outputLen];
+		for (int i = 0; i < outputLen; i++)
 			net_out[i] = new T;
 
 		for (int i = 0; i < size; i++)
@@ -238,7 +237,7 @@ public:
 		int epochs,
 		T speed = 1,
 		metrics metric = metrics::accuracy,
-		taskType type = taskType::bin_classification,
+		taskType ftype = taskType::bin_classification,
 		bool trainValidation = true,
 		bool testValidation = false
 	)
@@ -252,15 +251,15 @@ public:
 				int length = arrLayers[0]->getNeuronsNum();
 				net_out = process(readStrCsv<T>(data, length));
 
-				T* target_out = new T[out_len];
-				target_out = readStrCsv<T>(res, out_len);
+				T* target_out = new T[outputLen];
+				target_out = readStrCsv<T>(res, outputLen);
 
 				backpropagation(target_out, speed);
 
 				if (trainValidation)
-					trainEff = validate(trainDataFName, trainResFName, trainFileSize, metric, type);
+					trainEff = validate(trainDataFName, trainResFName, trainFileSize, metric, ftype);
 				if (testValidation)
-					testEff = validate(testDataFName, testResFName, testFileSize, metric, type);
+					testEff = validate(testDataFName, testResFName, testFileSize, metric, ftype);
 			}
 		}
 	}
@@ -274,22 +273,22 @@ public:
 		int nextNum = arrLayers[this->getLayersNum() - 1]->getNeuronsNum();
 
 		Layer<T>* layer = new Layer<T>(biases, prevNum, neurons, nextNum);
-		arrLayers.add(*layer, layers - 1);
-		layers++;
+		arrLayers.add(*layer, layersNum - 1);
+		layersNum++;
 
-		arrMatrixes.del(matrixes - 1);
-		matrixes--;
+		arrMatrixes.del(matrixesNum - 1);
+		matrixesNum--;
 
 		Matrix<T>* matrix1 = new Matrix<T>(neurons, prevNum, seed, maxWeight, minWeight);
 		Matrix<T>* matrix2 = new Matrix<T>(nextNum, neurons, seed, maxWeight, minWeight);
 		arrMatrixes.add(*matrix1);
 		arrMatrixes.add(*matrix2);
-		matrixes += 2;
+		matrixesNum += 2;
 	}
 
 	void addNeuron(int layer, T maxWeight, T minWeight = 0, int seed = 0)
 	{
-		if (layer > 0 and layer < layers)
+		if (layer > 0 and layer < layersNum)
 		{
 			int prevNum = arrLayers[layer]->getPrevNum();
 			int nextNum = arrLayers[layer]->getNextNum();
@@ -310,27 +309,27 @@ public:
 
 	void delLayer(int index, T maxWeight, T minWeight = 0, int seed = 0)
 	{
-		if (index > 0 and index < layers)
+		if (index > 0 and index < layersNum)
 		{
-			int prevNum = arrLayers[layers - 2]->getNeuronsNum();
+			int prevNum = arrLayers[layersNum - 2]->getNeuronsNum();
 			int nextNum = arrLayers[this->getLayersNum() - 1]->getNeuronsNum();
 
 			arrLayers.del(index);
-			layers--;
+			layersNum--;
 
-			arrMatrixes.del(matrixes - 1);
-			arrMatrixes.del(matrixes - 2);
-			matrixes -= 2;
+			arrMatrixes.del(matrixesNum - 1);
+			arrMatrixes.del(matrixesNum - 2);
+			matrixesNum -= 2;
 
 			Matrix<T>* matrix = new Matrix<T>(nextNum, prevNum, seed, maxWeight, minWeight);
 			arrMatrixes.add(*matrix);
-			matrixes++;
+			matrixesNum++;
 		}
 	}
 
 	void delNeuron(int layer, T maxWeight, T minWeight = 0, int seed = 0)
 	{
-		if (layer > 0 and layer < layers)
+		if (layer > 0 and layer < layersNum)
 		{
 			int prevNum = arrLayers[layer]->getPrevNum();
 			int nextNum = arrLayers[layer]->getNextNum();
@@ -353,9 +352,9 @@ public:
 
 	Layer<T>* getLayers() { return arrLayers.getArr(); }
 
-	int getMatrixesNum() { return matrixes; }
+	int getMatrixesNum() { return matrixesNum; }
 
-	int getLayersNum() { return layers; }
+	int getLayersNum() { return layersNum; }
 
 	T getEff() { return trainEff; }
 
@@ -364,20 +363,20 @@ public:
 	void fileOutput(std::string fileName)
 	{
 		std::ofstream file(fileName);
-		file << layers << "\n";
+		file << layersNum << "\n";
 
-		int i = int(type);
+		int i = int(ftype);
 		file << i << "\n";
 
-		for (int i = 0; i < layers; i++)
+		for (int i = 0; i < layersNum; i++)
 		{
 			file << arrLayers[i]->getNeuronsNum();
-			if (i != layers - 1)
+			if (i != layersNum - 1)
 				file << " ";
 		}
 		file << "\n";
 
-		for (int i = 0; i < layers; i++)
+		for (int i = 0; i < layersNum; i++)
 		{
 			for (int j = 0; j < arrLayers[i]->getNeuronsNum(); j++)
 			{
@@ -387,7 +386,7 @@ public:
 			file << "\n";
 		}
 
-		for (int k = 0; k < matrixes; k++)
+		for (int k = 0; k < matrixesNum; k++)
 		{
 			int height = arrMatrixes[k]->getHeight();
 			int lenght = arrMatrixes[k]->getLength();
@@ -407,7 +406,7 @@ public:
 	{
 		std::ofstream file(fileName, std::ios::app);
 
-		for (int i = 1; i < layers; i++)
+		for (int i = 1; i < layersNum; i++)
 		{
 			for (int j = 0; j < arrLayers[i]->getNeuronsNum(); j++)
 			{
@@ -415,7 +414,7 @@ public:
 			}
 		}
 
-		for (int i = 0; i < matrixes; i++)
+		for (int i = 0; i < matrixesNum; i++)
 		{
 			arrMatrixes[i]->fileOutput(file);
 		}

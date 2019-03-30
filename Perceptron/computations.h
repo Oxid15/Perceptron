@@ -16,12 +16,11 @@ T randomNumber(int seed, std::default_random_engine& engine, int max, int min = 
 template<typename T>
 T* elemPow(T* vect, int size, int power)
 {
-	T* arr = new T[size];
 	for (int i = 0; i < size; i++)
 	{
-		arr[i] = pow(vect[i], power);
+		vect[i] = pow(vect[i], power);
 	}
-	return arr;
+	return vect;
 }
 
 template<typename T>
@@ -54,9 +53,9 @@ template<typename T>
 T softplusDerivative(T num) { return sig(num); }
 
 template<typename T>
-T derivative(functionType type, T num)
+T derivative(functionType ftype, T num)
 {
-	switch (type)
+	switch (ftype)
 	{
 	case sigmoid:
 		return sigDerivative(num);
@@ -68,13 +67,19 @@ T derivative(functionType type, T num)
 	return NULL;
 }
 
+//template<typename T>
+//void sort(T* arr, int size)
+//{
+//
+//}
+
 template<typename T>
-T sum(T* in, int n)
+T sum(T* arr, int n)
 {
 	T sum = 0;
 	for (int i = 0; i < n; i++)
 	{
-		sum += in[i];
+		sum += arr[i];
 	}
 	return sum;
 }
@@ -82,7 +87,7 @@ T sum(T* in, int n)
 template<typename T>
 T euclidNorm(T* vect, int size)
 {
-	return pow(sum<T>(elemPow<T>(vect, size, 2), size), 0.5);
+	return pow(sum<T>(elemPow<T>(vect, size, /*pow =*/2), size), 0.5);
 }
 
 template<typename T>
@@ -93,7 +98,9 @@ T euclidNorm(T* vect1, T* vect2, int size)
 	{
 		arr[i] = (vect1[i] - vect2[i]);
 	}
-	return pow((sum<T>(elemPow<T>(arr, size, 2), size)), 0.5);
+	T norm = pow((sum<T>(elemPow<T>(arr, size, 2), size)), 0.5);
+	delete arr;
+	return norm;
 }
 
 template<typename T>
@@ -138,6 +145,8 @@ class expArray
 		}
 		arr = newArr;
 		size = newSize;
+		//I have unexpected error when I try to delete previous array
+		//it refers to the other classes logic
 	}
 
 public:
@@ -250,9 +259,4 @@ public:
 	}
 
 	int getSize() { return size; }
-
-	T* getArr()
-	{
-		return arr;
-	}
 };
