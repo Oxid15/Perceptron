@@ -5,12 +5,13 @@
 enum functionType { sigmoid, softpls, th};
 
 template<typename T>
-T randomNumber(int seed, std::default_random_engine& engine, int max, int min = 0)
+T randomNumber(int seed, std::default_random_engine& randEngine, int max, int min = 0)
 {
-	std::uniform_real_distribution<T> d(min, max);
-	T weight;
-	weight = d(engine);
-	return weight;
+	std::uniform_real_distribution<T> dist(min, max);
+
+	T num;
+	num = dist(randEngine);
+	return num;
 }
 
 template<typename T>
