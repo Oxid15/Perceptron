@@ -109,6 +109,25 @@ void setrandomWeights(std::string inFileName, std::string outFileName, std::defa
 }
 
 template<typename T>
+T** readCsv(std::fstream& file, int numOfStr, int numOfCol)
+{
+	T** output = new T*[numOfStr];
+	for (int i = 0; i < numOfStr; i++)
+		output[i] = new T;
+
+	for (int i = 0; i < numOfStr; i++)
+	{
+		for (int j = 0; j < numOfCol; j++)
+		{
+			file >> output[i][j];
+			file.get();
+		}
+	}
+
+	return output;
+}
+
+template<typename T>
 T* readStrCsv(std::fstream& file, int length)
 {
 	T* output = new T[length];

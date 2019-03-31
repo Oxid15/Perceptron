@@ -150,21 +150,19 @@ T weighedSum(T* in, T* weights, int size)
 
 //returns the integer array where numbers is the quantity of values that is satisfying intervals
 template<typename T>
-void computeFrequencies(int* freq, T* arr, int size, int numOfIntervals)
+int* computeFrequencies(int* freq, T* arr, int size, int numOfIntervals)
 {
 	insertionSort<T>(arr, size);
-
-	T max = arr[size - 1];
-	T min = arr[0];
-
-	T length = max - min;
-	T dx = length / numOfIntervals;
-
 	for (int i = 0; i < numOfIntervals; i++)
 		freq[i] = 0;
 
+	T min = arr[0];
+	T max = arr[size - 1];
+	T length = max - min;
+	T dx = length / numOfIntervals;
+
 	int bound = 0;
-	T interval = 0;
+	T interval = min;
 	for (int i = 0; i < numOfIntervals; i++)
 	{
 		for (int j = bound; j < size; j++)
@@ -172,11 +170,40 @@ void computeFrequencies(int* freq, T* arr, int size, int numOfIntervals)
 			if (arr[j] >= interval && arr[j] < interval + dx)
 			{
 				freq[i]++;
-				bound++;
+				bound = j;
 			}
 		}
+		interval += dx;
 	}
+	return freq;
 }
+
+template<typename T>
+double* computeDistFunc(double* distFunc, T* arr, int size, int numOfIntervals)
+{
+	int* freq = new int[numOfIntervals];
+	computeFrequencies<T>(freq, arr, size, numOfIntervals);
+
+	for (int i = 0; i < numOfIntervals; i++)
+		distFunc[i] = 0;
+
+	for (int i = 1; i < numOfIntervals; i++)
+	{
+		distFunc[i] += distFunc[i - 1] + freq[i];
+	}
+	for (int i = 1; i < numOfIntervals; i++)
+	{
+		distFunc[i] /= size;
+	}
+
+	return distFunc;
+}
+
+//template<typename T>
+//double* computeDenseFunc(double* denseFunc, T* arr, int size, int numOfIntervals)
+//{
+//
+//}
 
 template<typename T>
 class expArray
