@@ -173,6 +173,12 @@ int* computeFrequencies(int* freq, T* arr, int size, int numOfIntervals)
 				freq[i]++;
 				bound = j;
 			}
+			//includes last value that is equal to right limit
+			if (arr[j] == interval + dx && j == size - 1)
+			{
+				freq[i]++;
+				bound = j;
+			}
 		}
 		interval += dx;
 	}

@@ -47,27 +47,28 @@ int main()
 	//std::cout << aa[0] << " " << aa[1] << " " << aa[2] << "\n";
 	//std::cout << bb[0] << " " << bb[1] << " " << bb[2] << "\n";
 	//std::cout << cc[0] << " " << cc[1] << " " << cc[2] << "\n";
+
 	std::fstream file("test.csv");
 	double** arr = readCsv<double>(file, 78, 1);
 	double* a = new double[78];
 	for (int i = 0; i < 78; i++)
 		a[i] = arr[i][0];
 
-	int* freq = new int[20];
-	computeFrequencies<double>(freq, a, 78, 20);
+	int* freq = new int[10];
+	computeFrequencies<double>(freq, a, 78, 10);
 	int sum = 0;
-	for (int i = 0; i < 20; i++)
+	for (int i = 0; i < 10; i++)
 	{
 		sum += freq[i];
 		std::cout << freq[i] << "\n";
 	}
-	//std::cout << sum;
+	std::cout << sum;
 	std::cout << "\n";
 
-	double* dist = new double[20];
-	computeDistFunc(dist, a, 78, 20);
-	//for (int i = 0; i < 5; i++)
-	//{
-	//	std::cout << dist[i] << "\n";
-	//}
+	double* dist = new double[10];
+	computeDistFunc(dist, a, 78, 10);
+	for (int i = 0; i < 5; i++)
+	{
+		std::cout << dist[i] << "\n";
+	}
 }
