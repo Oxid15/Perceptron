@@ -23,6 +23,30 @@ void swap(T& left, T& right)
 }
 
 template<typename T>
+T max(T* arr, int size)
+{
+	T max = arr[0];
+	for (int i = 0; i < size; i++)
+	{
+		if (arr[i] > max)
+			max = arr[i];
+	}
+	return max;
+}
+
+template<typename T>
+T min(T* arr, int size)
+{
+	T min = arr[0];
+	for (int i = 0; i < size; i++)
+	{
+		if (arr[i] < min)
+			min = arr[i];
+	}
+	return min;
+}
+
+template<typename T>
 T* elemPow(T* vect, int size, int power)
 {
 	for (int i = 0; i < size; i++)
@@ -127,9 +151,11 @@ T euclidNorm(T* vect1, T* vect2, int size)
 template<typename T>
 T mean(T* arr, int n) { return sum<T>(arr, n) / n; }
 
+//normalizes vector values by dividing them by 
+//euclidean norm of this vector
 template<typename T>
-T* normalizeVect(T* vect, int size)
-{
+T* normalizeVect(T* vect, int size)			//TODO: make (an overloaded) 				
+{											//function for another normalization methods (AND for matrixes)
 	T norm = euclidNorm<T>(vect, size);
 	for (int i = 0; i < size; i++)
 	{
@@ -149,38 +175,38 @@ T weighedSum(T* in, T* weights, int size)
 	return sum;
 }
 
-//returns the integer array where numbers is the quantity of values that is satisfying intervals
+//returns the integer array where numbers is 
+//the quantity of values that is satisfying given intervals
 template<typename T>
-int* computeFrequencies(int* freq, T* arr, int size, int numOfIntervals)
+void computeFrequencies(int* result, T* arr, int size, int numOfIntervals)
 {
 	insertionSort<T>(arr, size);
 	for (int i = 0; i < numOfIntervals; i++)
-		freq[i] = 0;
+		result[i] = 0;
 
 	T min = arr[0];
 	T max = arr[size - 1];
-	T length = max - min;
-	T dx = length / numOfIntervals;
+	T dx = (max - min) / numOfIntervals; //lenght of one interval
 
-	int bound = 0;
 	T interval = min;
+	int bound = 0;
 	for (int i = 0; i < numOfIntervals; i++)
 	{
 		for (int j = bound; j < size; j++)
 		{
 			if (arr[j] >= interval && arr[j] < interval + dx)
 			{
-				freq[i]++;
-				bound = j;
+				result[i]++;
+				bound = j; //to not to check elements that have already been checked
 			}
 		}
 		interval += dx;
 	}
-	return freq;
 }
-
+  
+//computes cumulative distribution function
 template<typename T>
-double* computeDistFunc(double* distFunc, T* arr, int size, int numOfIntervals)
+void computeCmltvDistFunc(T* distFunc, T* arr, int size, int numOfIntervals)
 {
 	int* freq = new int[numOfIntervals];
 	computeFrequencies<T>(freq, arr, size, numOfIntervals);
@@ -191,20 +217,24 @@ double* computeDistFunc(double* distFunc, T* arr, int size, int numOfIntervals)
 	for (int i = 1; i < numOfIntervals; i++)
 	{
 		distFunc[i] += distFunc[i - 1] + freq[i];
+		distFunc[i] /= size; //normalization to probabilities interval [0,1]
 	}
-	for (int i = 1; i < numOfIntervals; i++)
-	{
-		distFunc[i] /= size;
-	}
-
-	return distFunc;
+	delete freq;
 }
 
-//template<typename T>
-//double* computeDenseFunc(double* denseFunc, T* arr, int size, int numOfIntervals)
-//{
-//
-//}
+template<typename T>
+void computeDenseFunc(T* result, T* arr, int size, int numOfIntervals)
+{
+	int* freq = new int[numOfIntervals];
+	computeFrequencies(freq, arr, size, numOfIntervals);
+
+	T height = max(freq, numOfIntervals) - min(freq, numOfIntervals);
+	for (int i = 0; i < numOfIntervals; i++)							//using max/min is necessary because
+	{														//I need to keep the order of denseFunc	safe
+		result[i] = freq[i] / height;						//therefore I cannot use insertionSort()
+	}
+	delete freq;
+}
 
 template<typename T>
 class expArray
@@ -225,6 +255,7 @@ class expArray
 		size = newSize;
 		//I have unexpected error when I try to delete previous array
 		//it refers to the other classes logic
+		//it works with simple types and classes but not with ones in this program
 	}
 
 public:

@@ -53,21 +53,33 @@ int main()
 	for (int i = 0; i < 78; i++)
 		a[i] = arr[i][0];
 
-	int* freq = new int[20];
-	computeFrequencies<double>(freq, a, 78, 20);
+	int* freq = new int[10];
+	computeFrequencies<double>(freq, a, 78, 10);
 	int sum = 0;
-	for (int i = 0; i < 20; i++)
+	for (int i = 0; i < 10; i++)
 	{
 		sum += freq[i];
 		std::cout << freq[i] << "\n";
 	}
-	//std::cout << sum;
+	std::cout << sum;
 	std::cout << "\n";
 
-	double* dist = new double[20];
-	computeDistFunc(dist, a, 78, 20);
-	//for (int i = 0; i < 5; i++)
-	//{
-	//	std::cout << dist[i] << "\n";
-	//}
+	double* Cmdist = new double[10];
+	computeCmltvDistFunc(Cmdist, a, 78, 10);
+	for (int i = 0; i < 10; i++)
+	{
+		std::cout << Cmdist[i] << "\n";
+	}
+	std::cout << "\n";
+
+	double sum2 = 0;
+	double* denseFunc = new double[10];
+	computeDenseFunc(denseFunc, a, 78, 10);
+	for (int i = 0; i < 10; i++)
+	{
+		sum2 += denseFunc[i];
+		std::cout << denseFunc[i] << "\n";
+	}
+	std::cout << sum;
+	std::cout << "\n";
 }
