@@ -47,6 +47,7 @@ int main()
 	//std::cout << aa[0] << " " << aa[1] << " " << aa[2] << "\n";
 	//std::cout << bb[0] << " " << bb[1] << " " << bb[2] << "\n";
 	//std::cout << cc[0] << " " << cc[1] << " " << cc[2] << "\n";
+
 	std::fstream file("test.csv");
 	double** arr = readCsv<double>(file, 78, 1);
 	double* a = new double[78];

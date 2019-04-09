@@ -199,6 +199,12 @@ void computeFrequencies(int* result, T* arr, int size, int numOfIntervals)
 				result[i]++;
 				bound = j; //to not to check elements that have already been checked
 			}
+			//includes last value that is equal to right limit
+			if (arr[j] == interval + dx && j == size - 1)
+			{
+				freq[i]++;
+				bound = j;
+			}
 		}
 		interval += dx;
 	}
