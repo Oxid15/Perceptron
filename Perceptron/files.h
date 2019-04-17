@@ -127,11 +127,13 @@ T** readCsv(std::fstream& file, int numOfStr, int numOfCol)
 	return output;
 }
 
+//too simple - can crash sometimes 
+//and doesn't have an exception handling
 template<typename T>
-T* readStrCsv(std::fstream& file, int length)
+T* readStrCsv(std::fstream& file, int strLen)
 {
-	T* output = new T[length];
-	for (int i = 0; i < length; i++)
+	T* output = new T[strLen];
+	for (int i = 0; i < strLen; i++)
 	{
 		file >> output[i];
 		file.get();
@@ -140,9 +142,9 @@ T* readStrCsv(std::fstream& file, int length)
 }
 
 template<typename T>
-void writeStrCsv(std::fstream& file, T* str, int length)
+void writeStrCsv(std::fstream& file, T* str, int strLen)
 {
-	for (int i = 0; i < length; i++)
+	for (int i = 0; i < strLen; i++)
 	{
 		file << str[i];
 		file << ';';
@@ -150,6 +152,7 @@ void writeStrCsv(std::fstream& file, T* str, int length)
 	file << "\n";
 }
 
+//normalizes numerical vectors in csv file by euclidean distance
 template<typename T>
 void normCsv(std::fstream& inFile, std::fstream& outFile, int strLen, int fileSize)
 {

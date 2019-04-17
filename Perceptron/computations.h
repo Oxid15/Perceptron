@@ -196,13 +196,15 @@ void computeFrequencies(int* result, T* arr, int size, int numOfIntervals)
 		{
 			if (arr[j] >= interval && arr[j] < interval + dx)
 			{
+				T left = interval;
+				T right = interval + dx;
 				result[i]++;
 				bound = j; //to not to check elements that have already been checked
 			}
 			//includes last value that is equal to right limit
 			if (arr[j] == interval + dx && j == size - 1)
 			{
-				freq[i]++;
+				result[i]++;
 				bound = j;
 			}
 		}
@@ -220,10 +222,10 @@ void computeCmltvDistFunc(T* distFunc, T* arr, int size, int numOfIntervals)
 	for (int i = 0; i < numOfIntervals; i++)
 		distFunc[i] = 0;
 
+	distFunc[0] = (double)freq[0] / size;
 	for (int i = 1; i < numOfIntervals; i++)
 	{
-		distFunc[i] += distFunc[i - 1] + freq[i];
-		distFunc[i] /= size; //normalization to probabilities interval [0,1]
+		distFunc[i] += distFunc[i - 1] + (double)freq[i] / size;
 	}
 	delete freq;
 }
