@@ -214,32 +214,32 @@ void computeFrequencies(int* result, T* arr, int size, int numOfIntervals)
   
 //computes cumulative distribution function
 template<typename T>
-void computeCmltvDistFunc(T* distFunc, T* arr, int size, int numOfIntervals)
+void computeCDF(T* CDF, T* arr, int size, int numOfIntervals)
 {
 	int* freq = new int[numOfIntervals];
 	computeFrequencies<T>(freq, arr, size, numOfIntervals);
 
 	for (int i = 0; i < numOfIntervals; i++)
-		distFunc[i] = 0;
+		CDF[i] = 0;
 
-	distFunc[0] = (double)freq[0] / size;
+	CDF[0] = (double)freq[0] / size;
 	for (int i = 1; i < numOfIntervals; i++)
 	{
-		distFunc[i] += distFunc[i - 1] + (double)freq[i] / size;
+		CDF[i] += CDF[i - 1] + (double)freq[i] / size;
 	}
 	delete freq;
 }
 
 template<typename T>
-void computeDenseFunc(T* result, T* arr, int size, int numOfIntervals)
+void computePDF(T* PDF, T* arr, int size, int numOfIntervals)
 {
 	int* freq = new int[numOfIntervals];
 	computeFrequencies(freq, arr, size, numOfIntervals);
 
 	T height = max(freq, numOfIntervals) - min(freq, numOfIntervals);
 	for (int i = 0; i < numOfIntervals; i++)							//using max/min is necessary because
-	{														//I need to keep the order of denseFunc	safe
-		result[i] = freq[i] / height;						//therefore I cannot use insertionSort()
+	{																	//I need to keep the order of denseFunc	safe
+		PDF[i] = freq[i] / height;									//therefore I cannot use insertionSort()
 	}
 	delete freq;
 }
