@@ -5,7 +5,7 @@
 enum functionType { sigmoid, softpls, th};
 
 template<typename T>
-T randomNumber(int seed, std::default_random_engine& randEngine, int max, int min = 0)
+T unifRealRandNum(int seed, std::default_random_engine& randEngine, int max, int min = 0)
 {
 	std::uniform_real_distribution<T> dist(min, max);
 
@@ -160,7 +160,7 @@ T median(T* arr, int size)
 }
 
 template<typename T>
-T variance(T* arr, int size, bool shifted) 
+T variance(T* arr, int size, bool isShifted) 
 { 
 	T mx = mean(arr, size);
 	T total = 0;
@@ -168,10 +168,75 @@ T variance(T* arr, int size, bool shifted)
 	{
 		total += (arr[i] - mx) * (arr[i] - mx);
 	}
-	if (shifted)
+	if (isShifted)
 		return total / size;
 	else
 		return total / (size - 1);
+}
+
+//standard deviation
+template<typename T>
+T SD(T* arr, int size, bool isShifted)
+{
+	if(isShifted)
+		return sqrtl(variance(arr, size, false));
+	else
+	{
+		double n = (double)size;
+		T corrCoeff = 1 + 1 / (4 * n) + 9 / (32 * n*n);
+		return sqrtl(variance(arr, n, false)) * corrCoeff;
+	}
+}
+
+//robust measure of scale
+//MAD (median absolute deviation) = 1.4826
+template<typename T>
+T MeasOfScale(T* arr, int size)
+{
+	T med = median(arr, size);
+	T* stdDev = new T[size];
+	for (int i = 0; i < size; i++)
+	{
+		stdDev[i] = abs(arr[i] - med);
+	}
+	T resMedian = median(stdDev, size) * 1.4826;
+	delete stdDev;
+
+	return resMedian;
+}
+
+template<typename T>
+T rawKthMoment(T* arr,int k, int size)
+{
+	if (k == 1)
+		return mean(arr, size);
+	else
+	{
+		T* total = new T[size];
+		for (int i = 0; i < size; i++)
+		{
+			total[i] = pow(arr[i], k);
+		}
+		T moment = sum(total, size) / double(size);
+		delete total;
+
+		return moment;
+	}
+}
+
+template<typename T>
+T centralKthMoment(T* arr, int k, int size)
+{
+	T mx = mean(arr, size);
+	T* total = new T[size];
+	for (int i = 0; i < size; i++)
+	{
+		total[i] = pow((arr[i] - mx), k);
+	}
+	T moment = sum(total, size) / double(size);
+	delete total;
+
+	return moment;
 }
 
 //normalizes vector values by dividing them by 
@@ -265,7 +330,7 @@ void computePDF(T* PDF, T* arr, int size, int numOfIntervals)
 
 	for (int i = 0; i < numOfIntervals; i++)							//using max/min is necessary because
 	{																	//I need to keep the order of denseFunc	safe
-		PDF[i] = freq[i] / dx;									//therefore I cannot use insertionSort()
+		PDF[i] = freq[i] / dx;									        //therefore I cannot use insertionSort()
 	}
 	delete freq;
 }

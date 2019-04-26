@@ -86,7 +86,7 @@ void setrandomWeights(std::string inFileName, std::string outFileName, std::defa
 		for (int j = 0; j < neurons[i]; j++)
 		{
 			if (i)
-				outFile << randomNumber<T>(seed, engine, maxWeight, minWeight) << " ";
+				outFile << unifRealRandNum<T>(seed, engine, maxWeight, minWeight) << " ";
 			else
 				outFile << "0 ";
 			seed++;
@@ -100,7 +100,7 @@ void setrandomWeights(std::string inFileName, std::string outFileName, std::defa
 		{
 			for (int j = 0; j < neurons[k + 1]; j++)
 			{
-				outFile << randomNumber<T>(seed, engine, maxWeight, minWeight) << " ";
+				outFile << unifRealRandNum<T>(seed, engine, maxWeight, minWeight) << " ";
 				seed++;
 			}
 		}
