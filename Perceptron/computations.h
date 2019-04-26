@@ -9,8 +9,7 @@ T randomNumber(int seed, std::default_random_engine& randEngine, int max, int mi
 {
 	std::uniform_real_distribution<T> dist(min, max);
 
-	T num;
-	num = dist(randEngine);
+	T num = dist(randEngine);
 	return num;
 }
 
@@ -64,10 +63,7 @@ T tanh(T num)
 }
 
 template<typename T>
-T sech(T num) 
-{
-	return 2 / (exp(-num) + exp(num));
-}
+T sech(T num) { return 2 / (exp(-num) + exp(num)); }
 
 template<typename T>
 T sig(T num) { return 1 / (1 + exp(-num)); }
@@ -149,7 +145,34 @@ T euclidNorm(T* vect1, T* vect2, int size)
 }
 
 template<typename T>
-T mean(T* arr, int n) { return sum<T>(arr, n) / n; }
+T mean(T* arr, int size) { return sum<T>(arr, size) / size; }
+
+template<typename T>
+T median(T* arr, int size)
+{
+	insertionSort(arr, size);
+	if (size % 2 != 0)
+		return arr[(size + 1) / 2];
+	else
+	{
+		return (arr[size / 2] + arr[size / 2 + 1]) / 2;
+	}
+}
+
+template<typename T>
+T variance(T* arr, int size, bool shifted) 
+{ 
+	T mx = mean(arr, size);
+	T total = 0;
+	for (int i = 0; i < size; i++)
+	{
+		total += (arr[i] - mx) * (arr[i] - mx);
+	}
+	if (shifted)
+		return total / size;
+	else
+		return total / (size - 1);
+}
 
 //normalizes vector values by dividing them by 
 //euclidean norm of this vector
@@ -242,7 +265,7 @@ void computePDF(T* PDF, T* arr, int size, int numOfIntervals)
 
 	for (int i = 0; i < numOfIntervals; i++)							//using max/min is necessary because
 	{																	//I need to keep the order of denseFunc	safe
-		PDF[i] = freq[i] / height;									//therefore I cannot use insertionSort()
+		PDF[i] = freq[i] / dx;									//therefore I cannot use insertionSort()
 	}
 	delete freq;
 }

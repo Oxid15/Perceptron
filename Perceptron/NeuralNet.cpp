@@ -142,7 +142,7 @@ public:
 	T validate(
 		std::string dataFileName,
 		std::string resFileName,
-		int size,
+		int fileSize,                                    //it should be equal for both files
 		metrics metric = metrics::accuracy,
 		taskType type = taskType::bin_classification
 	)
@@ -150,15 +150,15 @@ public:
 		std::fstream data(dataFileName);
 		std::fstream res(resFileName);
 
-		T** output = new T*[size];
-		for (int i = 0; i < size; i++)
+		T** output = new T*[fileSize];
+		for (int i = 0; i < fileSize; i++)
 			output[i] = new T[outputLen];
 
-		T** target_out = new T*[size];
-		for (int i = 0; i < size; i++)
+		T** target_out = new T*[fileSize];
+		for (int i = 0; i < fileSize; i++)
 			target_out[i] = new T[outputLen];
 
-		for (int i = 0; i < size; i++)
+		for (int i = 0; i < fileSize; i++)
 		{
 			int length = arrLayers[0]->getNeuronsNum();
 			T* out = new T[outputLen];
@@ -189,23 +189,23 @@ public:
 		case (metrics::accuracy):
 		{
 			int right = 0;
-			for (int i = 0; i < size; i++)
+			for (int i = 0; i < fileSize; i++)
 			{
 				if (output[i][0] == target_out[i][0])
 					right++;
 			}
 
-			int all = size;
+			int all = fileSize;
 			return T(right) / T(all);
 		}
 		case (metrics::meanEuclidNorm):
 		{
-			T* distances = new T[size];
-			for (int i = 0; i < size; i++)
+			T* distances = new T[fileSize];
+			for (int i = 0; i < fileSize; i++)
 			{
 				distances[i] = euclidNorm<T>(target_out[i], output[i], outputLen);
 			}
-			return mean<T>(distances, size);
+			return mean<T>(distances, fileSize);
 		}
 		}
 		return NULL;
@@ -229,11 +229,13 @@ public:
 
 	void fit(
 		std::string trainDataFName,
+		int trainDataFSize,
 		std::string trainResFName,
+		int trainResFSize,
 		std::string testDataFName,
+		int testDataFSize,
 		std::string testResFName,
-		int trainFileSize,
-		int testFileSize,
+		int testResFSize,
 		int epochs,
 		T speed = 1,
 		metrics metric = metrics::accuracy,
@@ -246,7 +248,7 @@ public:
 		{
 			std::fstream data(trainDataFName);
 			std::fstream res(trainResFName);
-			for (int i = 0; i < trainFileSize; i++)
+			for (int i = 0; i < trainDataFSize; i++)
 			{
 				int length = arrLayers[0]->getNeuronsNum();
 				net_out = process(readStrCsv<T>(data, length));
@@ -257,9 +259,11 @@ public:
 				backpropagation(target_out, speed);
 
 				if (trainValidation)
-					trainEff = validate(trainDataFName, trainResFName, trainFileSize, metric, ftype);
+					trainEff = validate(trainDataFName, trainDataFSize, trainResFName, trainResFSize, metric, ftype);  //FIXME
 				if (testValidation)
-					testEff = validate(testDataFName, testResFName, testFileSize, metric, ftype);
+					testEff = validate(testDataFName, testDataFSize, testResFName, testResFSize, metric, ftype);
+
+				delete target_out;
 			}
 		}
 	}
