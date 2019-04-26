@@ -236,10 +236,13 @@ void computeDenseFunc(T* result, T* arr, int size, int numOfIntervals)
 	int* freq = new int[numOfIntervals];
 	computeFrequencies(freq, arr, size, numOfIntervals);
 
-	T height = max(freq, numOfIntervals) - min(freq, numOfIntervals);
+	T min = arr[0];
+	T max = arr[size - 1];
+	T dx = (max - min) / numOfIntervals;
+
 	for (int i = 0; i < numOfIntervals; i++)							//using max/min is necessary because
 	{														//I need to keep the order of denseFunc	safe
-		result[i] = freq[i] / height;						//therefore I cannot use insertionSort()
+		result[i] = freq[i] / dx;		 				//therefore I cannot use insertionSort()
 	}
 	delete freq;
 }
