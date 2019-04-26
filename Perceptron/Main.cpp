@@ -55,7 +55,7 @@ int main()
 		a[i] = arr[i][0];
 
 	double* Cmdist = new double[7];
-	computeCmltvDistFunc(Cmdist, a, 78, 7);
+	computeCDF(Cmdist, a, 78, 7);
 	for (int i = 0; i < 7; i++)
 	{
 		std::cout << Cmdist[i] << "\n";
@@ -73,7 +73,7 @@ int main()
 
 	double sum2 = 0;
 	double* denseFunc = new double[7];
-	computeDenseFunc(denseFunc, a, 78, 7);
+	computePDF(denseFunc, a, 78, 7);
 	for (int i = 0; i < 7; i++)
 	{
 		std::cout << denseFunc[i] << "\n";
