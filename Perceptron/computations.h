@@ -155,7 +155,7 @@ T median(T* arr, int size)
 		return arr[(size + 1) / 2];
 	else
 	{
-		return (arr[size / 2] + arr[size / 2 + 1]) / 2;
+		return (arr[size / 2 - 1] + arr[size / 2]) / 2;
 	}
 }
 
