@@ -203,7 +203,7 @@ public:
 			T* distances = new T[fileSize];
 			for (int i = 0; i < fileSize; i++)
 			{
-				distances[i] = euclidNorm<T>(target_out[i], output[i], outputLen);
+				distances[i] = euclidDist<T>(target_out[i], output[i], outputLen);
 			}
 			return mean<T>(distances, fileSize);
 		}

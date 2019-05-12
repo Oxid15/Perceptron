@@ -46,7 +46,7 @@ T min(T* arr, int size)
 }
 
 template<typename T>
-T* elemPow(T* vect, int size, int power)
+T* elemPow(T* vect, int size, T power)
 {
 	for (int i = 0; i < size; i++)
 	{
@@ -126,13 +126,20 @@ T sum(T* arr, int n)
 }
 
 template<typename T>
-T euclidNorm(T* vect, int size)
+T LpNorm(T* vect, int size, int p)
 {
-	return pow(sum<T>(elemPow<T>(vect, size, /*pow =*/2), size), 0.5);
+	//if p is even then we don't need abs
+	if (p % 2 != 0)
+		for (int i = 0; i < size; i++)
+			vect[i] = abs(vect[i]);
+
+	return pow( sum<T>( elemPow<T>(vect, size, p), size ), 1./p );
 }
 
+//returns euclidean distance between two vectors
+//with the same size
 template<typename T>
-T euclidNorm(T* vect1, T* vect2, int size)
+T euclidDist(T* vect1, T* vect2, int size)
 {
 	T* arr = new T[size];
 	for (int i = 0; i < size; i++)
@@ -244,7 +251,7 @@ T centralKthMoment(T* arr, int k, int size)
 template<typename T>
 T* normalizeVect(T* vect, int size)			//TODO: make (an overloaded) 				
 {											//function for another normalization methods (AND for matrixes)
-	T norm = euclidNorm<T>(vect, size);
+	T norm = LpNorm<T>(vect, size,/*pow=*/2);
 	for (int i = 0; i < size; i++)
 	{
 		vect[i] /= norm;
@@ -353,7 +360,7 @@ class expArray
 		arr = newArr;
 		size = newSize;
 		//I have unexpected error when I try to delete previous array
-		//it refers to the other classes logic
+		//it refers to the logic of the other classes
 		//it works with simple types and classes but not with ones in this program
 	}
 

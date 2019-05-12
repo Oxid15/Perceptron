@@ -4,7 +4,7 @@
 #include"Evolution.cpp"
 int main()
 {
-	std::fstream file("test.csv");
+	/*std::fstream file("test.csv");
 	double** arr = readCsv<double>(file, 78, 1);
 	double* a = new double[78];
 	for (int i = 0; i < 78; i++)
@@ -26,5 +26,5 @@ int main()
 	std::cout << "[shifted][central]         1-th moment = " << centralKthMoment(a, 1, 78) << "\n";
 	std::cout << "[shifted][central]         2-th moment = " << centralKthMoment(a, 2, 78) << "\n";
 	std::cout << "[shifted][central]         3-th moment = " << centralKthMoment(a, 3, 78) << "\n";
-	std::cout << "[shifted][central]         4-th moment = " << centralKthMoment(a, 4, 78) << "\n";
+	std::cout << "[shifted][central]         4-th moment = " << centralKthMoment(a, 4, 78) << "\n";*/
 }
