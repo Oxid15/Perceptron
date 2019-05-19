@@ -196,18 +196,18 @@ T SD(T* arr, int size, bool isShifted)
 }
 
 //robust measure of scale
-//MAD (median absolute deviation) = 1.4826
+//MAD (median absolute deviation) * 1.4826
 template<typename T>
 T MeasOfScale(T* arr, int size)
 {
 	T med = median(arr, size);
-	T* stdDev = new T[size];
+	T* MAD = new T[size];
 	for (int i = 0; i < size; i++)
 	{
-		stdDev[i] = abs(arr[i] - med);
+		MAD[i] = abs(arr[i] - med);
 	}
-	T resMedian = median(stdDev, size) * 1.4826;
-	delete stdDev;
+	T resMedian = median(MAD, size) * 1.4826;
+	delete MAD;
 
 	return resMedian;
 }
