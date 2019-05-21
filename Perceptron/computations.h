@@ -159,12 +159,12 @@ T median(T* arr, int size)
 {
 	insertionSort(arr, size);
 	if (size % 2 != 0)
-		return arr[(size + 1) / 2];
+		return arr[(size + 1) / 2 - 1];
 	else
 	{
 		return (arr[size / 2 - 1] + arr[size / 2]) / 2;
 	}
-}
+	}
 
 template<typename T>
 T variance(T* arr, int size, bool isShifted) 
