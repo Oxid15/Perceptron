@@ -239,7 +239,7 @@ void computePDF(T* PDF, T* arr, int size, int numOfIntervals)
 	T height = max(freq, numOfIntervals) - min(freq, numOfIntervals);
 	for (int i = 0; i < numOfIntervals; i++)							//using max/min is necessary because
 	{																	//I need to keep the order of denseFunc	safe
-		PDF[i] = freq[i] / height;									//therefore I cannot use insertionSort()
+		PDF[i] = freq[i] / (height * size);									//therefore I cannot use insertionSort()
 	}
 	delete freq;
 }
