@@ -5,12 +5,11 @@
 enum functionType { sigmoid, softpls, th};
 
 template<typename T>
-T randomNumber(int seed, std::default_random_engine& randEngine, int max, int min = 0)
+T unifRealRandNum(int seed, std::default_random_engine& randEngine, int max, int min = 0)
 {
 	std::uniform_real_distribution<T> dist(min, max);
 
-	T num;
-	num = dist(randEngine);
+	T num = dist(randEngine);
 	return num;
 }
 
@@ -47,7 +46,7 @@ T min(T* arr, int size)
 }
 
 template<typename T>
-T* elemPow(T* vect, int size, int power)
+T* elemPow(T* vect, int size, T power)
 {
 	for (int i = 0; i < size; i++)
 	{
@@ -64,10 +63,7 @@ T tanh(T num)
 }
 
 template<typename T>
-T sech(T num) 
-{
-	return 2 / (exp(-num) + exp(num));
-}
+T sech(T num) { return 2 / (exp(-num) + exp(num)); }
 
 template<typename T>
 T sig(T num) { return 1 / (1 + exp(-num)); }
@@ -130,13 +126,20 @@ T sum(T* arr, int n)
 }
 
 template<typename T>
-T euclidNorm(T* vect, int size)
+T LpNorm(T* vect, int size, int p)
 {
-	return pow(sum<T>(elemPow<T>(vect, size, /*pow =*/2), size), 0.5);
+	//if p is even then we don't need abs
+	if (p % 2 != 0)
+		for (int i = 0; i < size; i++)
+			vect[i] = abs(vect[i]);
+
+	return pow( sum<T>( elemPow<T>(vect, size, p), size ), 1./p );
 }
 
+//returns euclidean distance between two vectors
+//with the same size
 template<typename T>
-T euclidNorm(T* vect1, T* vect2, int size)
+T euclidDist(T* vect1, T* vect2, int size)
 {
 	T* arr = new T[size];
 	for (int i = 0; i < size; i++)
@@ -149,14 +152,106 @@ T euclidNorm(T* vect1, T* vect2, int size)
 }
 
 template<typename T>
-T mean(T* arr, int n) { return sum<T>(arr, n) / n; }
+T mean(T* arr, int size) { return sum<T>(arr, size) / size; }
+
+template<typename T>
+T median(T* arr, int size)
+{
+	insertionSort(arr, size);
+	if (size % 2 != 0)
+		return arr[(size + 1) / 2 - 1];
+	else
+	{
+		return (arr[size / 2 - 1] + arr[size / 2]) / 2;
+	}
+	}
+
+template<typename T>
+T variance(T* arr, int size, bool isShifted) 
+{ 
+	T mx = mean(arr, size);
+	T total = 0;
+	for (int i = 0; i < size; i++)
+	{
+		total += (arr[i] - mx) * (arr[i] - mx);
+	}
+	if (isShifted)
+		return total / size;
+	else
+		return total / (size - 1);
+}
+
+//standard deviation
+template<typename T>
+T SD(T* arr, int size, bool isShifted)
+{
+	if(isShifted)
+		return sqrtl(variance(arr, size, false));
+	else
+	{
+		double n = (double)size;
+		T corrCoeff = 1 + 1 / (4 * n) + 9 / (32 * n*n);
+		return sqrtl(variance(arr, n, false)) * corrCoeff;
+	}
+}
+
+//robust measure of scale
+//MAD (median absolute deviation) * 1.4826
+template<typename T>
+T MeasOfScale(T* arr, int size)
+{
+	T med = median(arr, size);
+	T* MAD = new T[size];
+	for (int i = 0; i < size; i++)
+	{
+		MAD[i] = abs(arr[i] - med);
+	}
+	T resMedian = median(MAD, size) * 1.4826;
+	delete MAD;
+
+	return resMedian;
+}
+
+template<typename T>
+T rawKthMoment(T* arr,int k, int size)
+{
+	if (k == 1)
+		return mean(arr, size);
+	else
+	{
+		T* total = new T[size];
+		for (int i = 0; i < size; i++)
+		{
+			total[i] = pow(arr[i], k);
+		}
+		T moment = sum(total, size) / double(size);
+		delete total;
+
+		return moment;
+	}
+}
+
+template<typename T>
+T centralKthMoment(T* arr, int k, int size)
+{
+	T mx = mean(arr, size);
+	T* total = new T[size];
+	for (int i = 0; i < size; i++)
+	{
+		total[i] = pow((arr[i] - mx), k);
+	}
+	T moment = sum(total, size) / double(size);
+	delete total;
+
+	return moment;
+}
 
 //normalizes vector values by dividing them by 
 //euclidean norm of this vector
 template<typename T>
 T* normalizeVect(T* vect, int size)			//TODO: make (an overloaded) 				
 {											//function for another normalization methods (AND for matrixes)
-	T norm = euclidNorm<T>(vect, size);
+	T norm = LpNorm<T>(vect, size,/*pow=*/2);
 	for (int i = 0; i < size; i++)
 	{
 		vect[i] /= norm;
@@ -236,7 +331,10 @@ void computePDF(T* PDF, T* arr, int size, int numOfIntervals)
 	int* freq = new int[numOfIntervals];
 	computeFrequencies(freq, arr, size, numOfIntervals);
 
-	T height = max(freq, numOfIntervals) - min(freq, numOfIntervals);
+	T min = arr[0];
+	T max = arr[size - 1];
+	T dx = (max - min) / numOfIntervals;
+
 	for (int i = 0; i < numOfIntervals; i++)							//using max/min is necessary because
 	{																	//I need to keep the order of denseFunc	safe
 		PDF[i] = freq[i] / (height * size);									//therefore I cannot use insertionSort()
@@ -262,7 +360,7 @@ class expArray
 		arr = newArr;
 		size = newSize;
 		//I have unexpected error when I try to delete previous array
-		//it refers to the other classes logic
+		//it refers to the logic of the other classes
 		//it works with simple types and classes but not with ones in this program
 	}
 

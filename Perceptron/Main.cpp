@@ -1,82 +1,30 @@
+//TODO change name of all "size" function parameters to more appropriate ones
+
 #include<iostream>
 #include"Evolution.cpp"
-
 int main()
 {
-	//Population<float> p(2, 3, 5, -5, 10, 5);
-	//p.mutation();
-	//FileName name("net.txt");
-	//p.fileOutput(name);
-	//p.evaluate("testData.csv", "testResults.csv", "testData.csv", "testResults.csv", 4, 4, 400);
-
-	//NeuralNet<> net("testConfig.nn");
-	//net.fit("testData.csv", "testResults.csv", "testData.csv", "testResults.csv", 4, 4, 5000);
-
-	//double arr[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-	//elemPow(arr, 10, 2);
-	//double d = euclidNorm<double>(arr, 10);
-	//return 0;
-
-	//expArray<int> arr;
-	//int a = 1;
-	//int b = 2;
-	//int c = 3;
-	//int d = 4;
-	//arr.add(a);
-	//arr.add(b);
-	//arr.add(c);
-	//arr.add(d);
-	//for (int i = 0; i < 4; i++)
-	//{
-	//	std::cout << *arr[i] << "\n";
-	//}
-
-	//expArray<int*> arr;
-	//int* a = new int[3];
-	//a[0] = 1; a[1] = 2; a[2] = 3;
-	//int* b = new int[3];
-	//b[0] = 4; b[1] = 5; b[2] = 6;
-	//int* c = new int[3];
-	//c[0] = 7; c[1] = 8; c[2] = 9;
-	//arr.add(a);
-	//arr.add(b);
-	//arr.add(c);
-	//int* aa = *arr[0];
-	//int* bb = *arr[1];
-	//int* cc = *arr[2];
-	//std::cout << aa[0] << " " << aa[1] << " " << aa[2] << "\n";
-	//std::cout << bb[0] << " " << bb[1] << " " << bb[2] << "\n";
-	//std::cout << cc[0] << " " << cc[1] << " " << cc[2] << "\n";
-
-	std::fstream file("test.csv");
-	double** arr = readCsv<double>(file, 78, 1);
-	double* a = new double[78];
-	for (int i = 0; i < 78; i++)
+	std::fstream file("test2.csv");
+	double** arr = readCsv<double>(file, 67, 1);
+	double* a = new double[67];
+	for (int i = 0; i < 67; i++)
 		a[i] = arr[i][0];
-
-	double* Cmdist = new double[7];
-	computeCDF(Cmdist, a, 78, 7);
-	for (int i = 0; i < 7; i++)
-	{
-		std::cout << Cmdist[i] << "\n";
-	}
+	
+	std::cout << "              mean             = " << mean(a, 67) << "\n";
+	std::cout << "              median           = " << median(a, 67) << "\n";
+	std::cout << "[shifted]     variance         = " << variance(a, 67, true) << "\n";
+	std::cout << "[not_shifted] variance         = " << variance(a, 67, false) << "\n";
+	std::cout << "[shifted]     SD               = " << SD(a, 67, true) << "\n";
+	std::cout << "[not_shifted] SD               = " << SD(a, 67, false) << "\n";
+	std::cout << "              measure of scale = " << MeasOfScale(a, 67) << "\n";
 	std::cout << "\n";
-
-	int* freq = new int[7];
-	computeFrequencies<double>(freq, a, 78, 7);
-	int sum = 0;
-	for (int i = 0; i < 7; i++)
-	{
-		std::cout << freq[i] << "\n";
-	}
+	std::cout << "[shifted][raw]             1-th moment = " << rawKthMoment(a, 1, 67) << "\n";
+	std::cout << "[shifted][raw]             2-th moment = " << rawKthMoment(a, 2, 67) << "\n";
+	std::cout << "[shifted][raw]             3-th moment = " << rawKthMoment(a, 3, 67) << "\n";
+	std::cout << "[shifted][raw]             4-th moment = " << rawKthMoment(a, 4, 67) << "\n";
 	std::cout << "\n";
-
-	double sum2 = 0;
-	double* denseFunc = new double[7];
-	computePDF(denseFunc, a, 78, 7);
-	for (int i = 0; i < 7; i++)
-	{
-		std::cout << denseFunc[i] << "\n";
-	}
-	std::cout << "\n";
+	std::cout << "[shifted][central]         1-th moment = " << centralKthMoment(a, 1, 67) << "\n";
+	std::cout << "[shifted][central]         2-th moment = " << centralKthMoment(a, 2, 67) << "\n";
+	std::cout << "[shifted][central]         3-th moment = " << centralKthMoment(a, 3, 67) << "\n";
+	std::cout << "[shifted][central]         4-th moment = " << centralKthMoment(a, 4, 67) << "\n";
 }

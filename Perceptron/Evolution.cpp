@@ -10,7 +10,7 @@ void setrandomWeights(NeuralNet<T>& net, std::default_random_engine engine, int 
 		for (int j = 0; j < neurons; j++)
 		{
 			if (i)
-				net.getLayers()[i]->getNeurons()[j]->setBias(randomNumber<T>(seed, engine, maxWeight, minWeight));
+				net.getLayers()[i]->getNeurons()[j]->setBias(unifRealRandNum<T>(seed, engine, maxWeight, minWeight));
 			else
 				net.getLayers()[i]->getNeurons()[j]->setBias(0);
 			seed++;
@@ -26,7 +26,7 @@ void setrandomWeights(NeuralNet<T>& net, std::default_random_engine engine, int 
 		{
 			for (int j = 0; j < height; j++)
 			{
-				net.getMatrixes()[k]->setWeight(i, j, randomNumber<T>(seed, engine, maxWeight, minWeight));
+				net.getMatrixes()[k]->setWeight(i, j, unifRealRandNum<T>(seed, engine, maxWeight, minWeight));
 				seed++;
 			}
 		}
@@ -77,14 +77,14 @@ public:
 		for (int i = 0; i < population_size; i++)
 		{
 
-			int layers = randomNumber<T>(seed, engine, maxLayers + 1, minLayers);
+			int layers = unifRealRandNum<T>(seed, engine, maxLayers + 1, minLayers);
 			int matrixes = layers - 1;
 			int* neurons = new int[layers];
 
 			neurons[0] = inputSize;
 			for (int i = 1; i < layers - 1; i++)
 			{
-				neurons[i] = inputSize + int(randomNumber<T>(seed, engine, log(inputSize) + 2));
+				neurons[i] = inputSize + int(unifRealRandNum<T>(seed, engine, log(inputSize) + 2));
 			}
 			neurons[layers - 1] = outputSize;
 
@@ -94,7 +94,7 @@ public:
 				biases[i] = new T[neurons[i]];
 				for (int j = 0; j < neurons[i]; j++)
 				{
-					biases[i][j] = randomNumber<T>(seed, engine, maxWeight, minWeight);
+					biases[i][j] = unifRealRandNum<T>(seed, engine, maxWeight, minWeight);
 					seed++;
 				}
 			}
@@ -105,7 +105,7 @@ public:
 				weights[i] = new T[neurons[i] * neurons[i + 1]];
 				for (int j = 0; j < neurons[i] * neurons[i + 1]; j++)
 				{
-					weights[i][j] = randomNumber<T>(seed, engine, maxWeight, minWeight);
+					weights[i][j] = unifRealRandNum<T>(seed, engine, maxWeight, minWeight);
 					seed++;
 				}
 			}
@@ -118,11 +118,11 @@ public:
 	{
 		for (int i = 0; i < size; i++)
 		{
-			float chance = randomNumber<T>(seed, engine, 1);
+			float chance = unifRealRandNum<T>(seed, engine, 1);
 
 			if (chance <= mutation_chance)
 			{
-				float mut_prop = randomNumber<T>(seed, engine, 1);
+				float mut_prop = unifRealRandNum<T>(seed, engine, 1);
 
 				if (population[i].getLayersNum() < 3)
 				{
@@ -139,20 +139,20 @@ public:
 					else if(mut_prop > 0.16 and mut_prop <= 0.33)
 					{
 						int maxLayers = population[i].getLayersNum();
-						int layer = randomNumber<T>(seed, engine, maxLayers - 1, 1);
+						int layer = unifRealRandNum<T>(seed, engine, maxLayers - 1, 1);
 						if (population[i].getLayersNum() > 1)
 							population[i].delLayer(layer, maxWeight, minWeight, seed);
 					}
 					else if(mut_prop > 0.33 and mut_prop <= 0.66)
 					{
 						int maxLayers = population[i].getLayersNum();
-						int layer = randomNumber<T>(seed, engine, maxLayers - 1, 1);
+						int layer = unifRealRandNum<T>(seed, engine, maxLayers - 1, 1);
 						population[i].addNeuron(layer, maxWeight, minWeight, seed);
 					}
 					else if(mut_prop > 0.66)
 					{
 						int maxLayers = population[i].getLayersNum();
-						int layer = randomNumber<T>(seed, engine, maxLayers - 1, 1);
+						int layer = unifRealRandNum<T>(seed, engine, maxLayers - 1, 1);
 						if (population[i].getLayers()[layer].getNeuronsNum() > 1)
 							population[i].delNeuron(layer, maxWeight, minWeight, seed);
 					}

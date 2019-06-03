@@ -36,7 +36,7 @@ public:
 		{
 			for (int j = 0; j < length; j++)
 			{
-				arr[j][i] = randomNumber<T>(seed, engine, maxWeight, minWeight);
+				arr[j][i] = unifRealRandNum<T>(seed, engine, maxWeight, minWeight);
 				k++;
 			}
 		}
