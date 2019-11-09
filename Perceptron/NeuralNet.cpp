@@ -1,3 +1,6 @@
+// Templates with type T is used to allow using different types of numbers, not only double
+// double by default in NeuralNet class
+
 #include "Layer.cpp"
 
 enum metrics { accuracy, meanEuclidNorm };
@@ -142,7 +145,7 @@ public:
 	T validate(
 		std::string dataFileName,
 		std::string resFileName,
-		int fileSize,                                    //it should be equal for both files
+		int fileSize,                                //it should be equal for both files
 		metrics metric = metrics::accuracy,
 		taskType type = taskType::bin_classification
 	)
@@ -175,7 +178,7 @@ public:
 			{
 			case(taskType::bin_classification):			
 			{
-				//really need to review this block
+				//TODO: review this block
 				if (output[i][0] >= 0.5)
 					output[i][0] = 1;
 				else
