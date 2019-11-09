@@ -1,60 +1,16 @@
 #include<fstream>
 #include<string>
 
-class FileName
-{
-	std::string name;
-	std::string extension;
-	int nameLen;
-	int extLen;
-
-public:
-
-	FileName( std::string fileName)
-	{
-		char c = NULL;
-		int i = 0;
-		while (c != '.')
-		{
-			c = fileName[i];
-			if (c != '.')
-				name += fileName[i];
-			i++;
-		}
-		nameLen = i - 1;
-
-		int j = 0;
-		while (c != '\0')
-		{
-			extension += fileName[i];
-			c = fileName[i];
-			i++;
-			j++;
-		}
-		extLen = j - 1;
-	}
-
-	std::string getName() { return name; }
-
-	std::string getExt() { return extension; }
-
-	std::string getFullStr() { return name + '.' + extension; }
-
-	void setName(std::string _name, int _length) 
-	{ 
-		name = _name;
-		nameLen = _length;
-	}
-
-	void setExt(std::string _extension, int _length) 
-	{ 
-		extension = _extension; 
-		extLen = _length;
-	}
-};
-
 template<typename T>
-void setrandomWeights(std::string inFileName, std::string outFileName, std::default_random_engine engine, int seed, T maxWeight, T minWeight = 0)
+void setrandomWeights
+(
+	std::string inFileName, 
+	std::string outFileName, 
+	std::default_random_engine engine, 
+	T maxWeight,
+	int seed = 0,
+	T minWeight = 0
+)
 {
 	std::ifstream inFile(inFileName);
 	std::ofstream outFile(outFileName);
@@ -66,9 +22,7 @@ void setrandomWeights(std::string inFileName, std::string outFileName, std::defa
 
 	int* neurons = new int[layers];
 	for (int i = 0; i < layers; i++)
-	{
 		inFile >> neurons[i];
-	}
 
 	outFile << layers << "\n";
 	outFile << type << "\n";
@@ -106,15 +60,12 @@ void setrandomWeights(std::string inFileName, std::string outFileName, std::defa
 		}
 		outFile << "\n";
 	}
+	delete neurons;
 }
 
 template<typename T>
-T** readCsv(std::fstream& file, int numOfStr, int numOfCol)
+void readCsv(std::fstream& file,T** output, int numOfStr, int numOfCol)
 {
-	T** output = new T*[numOfStr];
-	for (int i = 0; i < numOfStr; i++)
-		output[i] = new T;
-
 	for (int i = 0; i < numOfStr; i++)
 	{
 		for (int j = 0; j < numOfCol; j++)
@@ -123,22 +74,18 @@ T** readCsv(std::fstream& file, int numOfStr, int numOfCol)
 			file.get();
 		}
 	}
-
-	return output;
 }
 
 //too simple - can crash sometimes 
 //and doesn't have an exception handling
 template<typename T>
-T* readStrCsv(std::fstream& file, int strLen)
+void readStrCsv(std::fstream& file,T* output, int strLen)
 {
-	T* output = new T[strLen];
 	for (int i = 0; i < strLen; i++)
 	{
 		file >> output[i];
 		file.get();
 	}
-	return output;
 }
 
 template<typename T>
@@ -154,16 +101,14 @@ void writeStrCsv(std::fstream& file, T* str, int strLen)
 
 //normalizes numerical vectors in csv file by euclidean distance
 template<typename T>
-void normCsv(std::fstream& inFile, std::fstream& outFile, int strLen, int fileSize)
+void normCsv(std::fstream& inFile, std::fstream& outFile, int strLen, int numOfStr)
 {
-	for (int i = 0; i < fileSize; i++)
+	for (int i = 0; i < numOfStr; i++)
 	{
 		T* str = new T[strLen];
 		str = readStrCsv<T>(inFile, strLen);
 		str = normalizeVect<T>(str, strLen);
-
 		writeStrCsv<T>(outFile, str, strLen);
-
 		delete str;
 	}
 }
