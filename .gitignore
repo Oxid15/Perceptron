@@ -16,3 +16,9 @@
 *.log
 
 *.pdb
+
+x64/Debug/
+
+Perceptron/x64/Debug/
+
+*.sln
