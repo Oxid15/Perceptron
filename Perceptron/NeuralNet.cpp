@@ -43,6 +43,8 @@ class NeuralNet
 		}
 	}
 
+public:
+
 	T* process(T* input)
 	{
 		arrLayers[0]->process(input);
@@ -51,18 +53,6 @@ class NeuralNet
 			arrLayers[i]->process(arrLayers[i - 1]->getOutput(), arrMatrixes[i - 1], ftype);
 		}
 		return arrLayers[layersNum - 1]->getOutput();
-	}
-
-public:
-
-	NeuralNet()
-	{
-		layersNum = 2;
-		matrixesNum = 1;
-		ftype = sigmoid;
-		isEmpty = true;
-		outputLen = 1;
-		net_out = new T;
 	}
 
 	NeuralNet(std::string fileName)

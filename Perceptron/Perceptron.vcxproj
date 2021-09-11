@@ -121,7 +121,6 @@
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="NeuralNet.cpp" />
     <ClCompile Include="Neuron.cpp" />
-    <ClCompile Include="test.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="currentConfig.nn" />
@@ -129,7 +128,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="computations.h" />
-    <ClInclude Include="Evolution.cpp" />
     <ClInclude Include="files.h" />
   </ItemGroup>
   <ItemGroup>
