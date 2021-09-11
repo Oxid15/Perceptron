@@ -8,3 +8,11 @@
 \Debug/
 
 *.filters
+
+*.exe
+
+*.obj
+
+*.log
+
+*.pdb
