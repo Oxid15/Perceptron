@@ -13,30 +13,6 @@ T unifRealRandNum(int seed, std::default_random_engine& randEngine, int max, int
 }
 
 template<typename T>
-T max(T* arr, int size)
-{
-	T max = arr[0];
-	for (int i = 0; i < size; i++)
-	{
-		if (arr[i] > max)
-			max = arr[i];
-	}
-	return max;
-}
-
-template<typename T>
-T min(T* arr, int size)
-{
-	T min = arr[0];
-	for (int i = 0; i < size; i++)
-	{
-		if (arr[i] < min)
-			min = arr[i];
-	}
-	return min;
-}
-
-template<typename T>
 T* elemPow(T* vect, int size, T power)
 {
 	for (int i = 0; i < size; i++)
@@ -142,95 +118,11 @@ T euclidDist(T* vect1, T* vect2, int size)
 template<typename T>
 T mean(T* arr, int size) { return sum<T>(arr, size) / size; }
 
-template<typename T>
-T median(T* arr, int size)
-{
-	insertionSort(arr, size);
-	size % 2 != 0 ? return arr[(size + 1) / 2 - 1]: return (arr[size / 2 - 1] + arr[size / 2]) / 2;
-}
-
-template<typename T>
-T variance(T* arr, int size, bool isShifted) 
-{ 
-	T mx = mean(arr, size);
-	T total = 0;
-	for (int i = 0; i < size; i++)
-	{
-		total += (arr[i] - mx) * (arr[i] - mx);
-	}
-	isShifted ? return total / size : return total / (size - 1);
-}
-
-//standard deviation
-template<typename T>
-T SD(T* arr, int size, bool isShifted)
-{
-	if(isShifted)
-		return sqrtl(variance(arr, size, false));
-	else
-	{
-		double n = (double)size;
-		T corrCoeff = 1 + 1 / (4 * n) + 9 / (32 * n*n);
-		return sqrtl(variance(arr, n, false)) * corrCoeff;
-	}
-}
-
-//robust measure of scale
-//MAD (median absolute deviation) * 1.4826
-template<typename T>
-T MeasOfScale(T* arr, int size)
-{
-	T med = median(arr, size);
-	T* MAD = new T[size];
-	for (int i = 0; i < size; i++)
-	{
-		MAD[i] = abs(arr[i] - med);
-	}
-	T resMedian = median(MAD, size) * 1.4826;
-	delete MAD;
-
-	return resMedian;
-}
-
-template<typename T>
-T rawKthMoment(T* arr,int k, int size)
-{
-	if (k == 1)
-		return mean(arr, size);
-	else
-	{
-		T* total = new T[size];
-		for (int i = 0; i < size; i++)
-		{
-			total[i] = pow(arr[i], k);
-		}
-		T moment = sum(total, size) / double(size);
-		delete total;
-
-		return moment;
-	}
-}
-
-template<typename T>
-T centralKthMoment(T* arr, int k, int size)
-{
-	T mx = mean(arr, size);
-	T* total = new T[size];
-	for (int i = 0; i < size; i++)
-	{
-		total[i] = pow((arr[i] - mx), k);
-	}
-	T moment = sum(total, size) / double(size);
-	delete total;
-
-	return moment;
-}
-
 //normalizes vector values by dividing them by 
 //euclidean norm of this vector
 template<typename T>
-T* normalizeVect(T* vect, int size)			//TODO: make (an overloaded) 				
-{											//function for another normalization methods (AND for matrices)
+T* normalizeVect(T* vect, int size)
+{
 	T norm = LpNorm<T>(vect, size,/*pow=*/2);
 	for (int i = 0; i < size; i++)
 	{
@@ -245,76 +137,6 @@ T weighedSum(T* in, T* weights, int size)
 	T sum = 0;
 	for (int i = 0; i < size; i++) sum += in[i] * weights[i];
 	return sum;
-}
-
-//returns the integer array where numbers is 
-//the quantity of values that is satisfying given intervals
-template<typename T>
-void computeFrequencies(int* result, T* arr, int size, int numOfIntervals)
-{
-	insertionSort<T>(arr, size);
-	for (int i = 0; i < numOfIntervals; i++)
-		result[i] = 0;
-
-	T min = arr[0];
-	T max = arr[size - 1];
-	T dx = (max - min) / numOfIntervals; //lenght of one interval
-
-	T interval = min;
-	int bound = 0;
-	for (int i = 0; i < numOfIntervals; i++)
-	{
-		for (int j = bound; j < size; j++)
-		{
-			if (arr[j] >= interval && arr[j] < interval + dx)
-			{
-				T left = interval;
-				T right = interval + dx;
-				result[i]++;
-				bound = j; //to not to check elements that have already been checked
-			}
-			//includes last value that is equal to right limit
-			if (arr[j] == interval + dx && j == size - 1)
-			{
-				result[i]++;
-				bound = j;
-			}
-		}
-		interval += dx;
-	}
-}
-
-//computes cumulative distribution function
-template<typename T>
-void computeCDF(T* CDF, T* arr, int size, int numOfIntervals)
-{
-	int* freq = new int[numOfIntervals];
-	computeFrequencies<T>(freq, arr, size, numOfIntervals);
-
-	for (int i = 0; i < numOfIntervals; i++)
-		CDF[i] = 0;
-
-	CDF[0] = (double)freq[0] / size;
-	for (int i = 1; i < numOfIntervals; i++)
-	{
-		CDF[i] += CDF[i - 1] + (double)freq[i] / size;
-	}
-	delete freq;
-}
-
-template<typename T>
-void computePDF(T* PDF, T* arr, int size, int numOfIntervals)
-{
-	int* freq = new int[numOfIntervals];
-	computeFrequencies(freq, arr, size, numOfIntervals);
-
-	T min = arr[0];
-	T max = arr[size - 1];
-	T dx = (max - min) / numOfIntervals;
-
-	for (int i = 0; i < numOfIntervals; i++)	//using max/min is necessary because																	//I need to keep the order of denseFunc	safe
-		PDF[i] = freq[i] / (dx * size);			//therefore I cannot use insertionSort()
-	delete freq;
 }
 
 template<typename T>
@@ -425,7 +247,7 @@ public:
 		}
 		catch (char* str)
 		{
-			std::cerr << str << "\n";
+			//std::cerr << str << "\n";
 		}
 		return;
 	}
@@ -443,7 +265,7 @@ public:
 		}
 		catch (char* str)
 		{
-			std::cerr << str << "\n";
+			//std::cerr << str << "\n";
 		}
 		return nullptr;
 	}

@@ -8,3 +8,15 @@
 \Debug/
 
 *.filters
+
+*.exe
+
+*.obj
+
+*.log
+
+*.pdb
+
+x64/Debug/
+
+Perceptron/x64/Debug/
