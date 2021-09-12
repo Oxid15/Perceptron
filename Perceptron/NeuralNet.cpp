@@ -263,6 +263,7 @@ public:
 					testEff = validate(testDataFName, testResFName, testDataFSize, metric, ftype);
 
 				delete target_out;
+				delete input;
 			}
 		}
 	}
