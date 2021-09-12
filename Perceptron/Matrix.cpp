@@ -122,31 +122,13 @@ public:
 
 	void setWeights(T* layerError, T* layerInput, T speed)
 	{
-		T** dWeights = new T*[length];
-		for (int i = 0; i < length; i++)
-		{
-			dWeights[i] = new T[height];
-		}
-
 		for (int i = 0; i < height; i++)
 		{
 			for (int j = 0; j < length; j++)
 			{
-				dWeights[j][i] = (speed * layerInput[i] * layerError[j]);
+				arr[j][i] += (speed * layerInput[i] * layerError[j]);
 			}
 		}
-
-		for (int i = 0; i < height; i++)
-		{
-			for (int j = 0; j < length; j++)
-			{
-				arr[j][i] += dWeights[j][i];
-			}
-		}
-
-		for (int i = 0; i < length; i++)
-			delete dWeights[i];
-		delete[] dWeights;
 	}
 
 	T getWeight(int i, int j)
