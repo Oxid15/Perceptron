@@ -262,8 +262,8 @@ public:
 				if (testValidation)
 					testEff = validate(testDataFName, testResFName, testDataFSize, metric, ftype);
 
-				delete target_out;
-				delete input;
+				delete[] target_out;
+				delete[] input;
 			}
 		}
 	}

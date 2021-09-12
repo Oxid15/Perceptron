@@ -30,6 +30,7 @@ public:
 		prevNum = _prevNum;
 		nextNum = _nextNum;
 		in = new T[prevNum];
+		out = 0;
 	}
 
 	~Neuron() { delete in; }

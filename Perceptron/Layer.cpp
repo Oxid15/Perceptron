@@ -68,7 +68,6 @@ public:
 			error[i] = (target[i] - output[i]) *
 				derivative<T>(ftype, weighedSum<T>(input, matrix->getColWeights(i), prevNum) + arr[i]->getBias());
 		}
-
 	}
 
 	void setError(T* errors, Matrix<T>* thisMatrix, Matrix<T>* prevMatrix, functionType ftype)
