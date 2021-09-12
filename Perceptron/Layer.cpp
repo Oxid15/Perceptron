@@ -95,19 +95,6 @@ public:
 
 	void setNeurons(int _neurons) { neurons = _neurons; }
 
-	void add()
-	{
-		Neuron<T>* neuron = new Neuron<T>(prevNum, nextNum, 0);
-		arr.add(*neuron);
-		neurons++;
-	}
-
-	void del(int index)
-	{
-		arr.del(index);
-		neurons--;
-	}
-
 	T* getInput() { return input; }
 
 	T* getOutput() { return output; }
