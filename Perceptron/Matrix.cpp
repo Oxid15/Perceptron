@@ -9,17 +9,6 @@ class Matrix
 	int height;
 
 public:
-	Matrix()
-	{
-		length = 1;
-		height = 1;
-		arr = new T*[length];
-		for (int i = 0; i < length; i++)
-		{
-			arr[i] = new T[height];
-		}
-	}
-
 	Matrix(int _length, int _height, int seed, T maxWeight, T minWeight)
 	{
 		length = _length;
@@ -100,7 +89,6 @@ public:
 			else
 				throw "Access violation!";
 		}
-
 		catch (char* str)
 		{
 			std::cerr << str << "\n";

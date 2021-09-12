@@ -11,16 +11,6 @@ class Layer
 	int prevNum;
 	int nextNum;
 public:
-	Layer()
-	{
-		input = new T;
-		output = new T;
-		error = new T;
-		neurons = 1;
-		prevNum = 1;
-		nextNum = 1;
-	}
-
 	Layer(T* biases, int _prevNum = 1, int _neuronsNum = 1, int _nextNum = 1)
 	{
 		neurons = _neuronsNum;
