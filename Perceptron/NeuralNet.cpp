@@ -155,14 +155,16 @@ public:
 		{
 			int length = arrLayers[0]->getNeuronsNum();
 			T* out = new T[outputLen];
-			out = process(readStrCsv<T>(data, length));
+			T* in = new T[length];
+			readStrCsv(data, in, length);
+			out = process(in);
 
-			for (int j = 0; j < outputLen; j++)
+			for (int j = 0 ;j < outputLen; j++)
 			{
 				output[i][j] = out[j];
 			}
 
-			target_out[i] = readStrCsv<T>(res, outputLen);
+			readStrCsv<T>(res, target_out[i], outputLen);
 
 			switch (type)
 			{
@@ -215,7 +217,9 @@ public:
 		for (int i = 0; i < size; i++)
 		{
 			int length = arrLayers[0]->getNeuronsNum();
-			net_out[i] = process(readStrCsv<T>(set, length));
+			T* input = new T[length];
+			readStrCsv(set, input, length);
+			net_out[i] = process(input);
 		}
 		return net_out;
 	}
@@ -244,17 +248,19 @@ public:
 			for (int i = 0; i < trainDataFSize; i++)
 			{
 				int length = arrLayers[0]->getNeuronsNum();
-				net_out = process(readStrCsv<T>(data, length));
+				T* input = new T[length];
+				readStrCsv<T>(data, input, length);
+				net_out = process(input);
 
 				T* target_out = new T[outputLen];
-				target_out = readStrCsv<T>(res, outputLen);
+				readStrCsv<T>(res, target_out, outputLen);
 
 				backpropagation(target_out, speed);
 
 				if (trainValidation)
-					trainEff = validate(trainDataFName, trainDataFSize, trainResFName, trainResFSize, metric, ftype);  //FIXME
+					trainEff = validate(trainDataFName, trainResFName, trainDataFSize, metric, ftype);  //FIXME
 				if (testValidation)
-					testEff = validate(testDataFName, testDataFSize, testResFName, testResFSize, metric, ftype);
+					testEff = validate(testDataFName, testResFName, testDataFSize, metric, ftype);
 
 				delete target_out;
 			}
@@ -347,7 +353,7 @@ public:
 
 	expArray<Matrix<T>> getMatrixes() { return arrMatrixes; }
 
-	Layer<T>* getLayers() { return arrLayers.getArr(); }
+	expArray <Layer<T>> getLayers() { return arrLayers; }
 
 	int getMatrixesNum() { return matrixesNum; }
 
