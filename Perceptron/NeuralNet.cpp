@@ -164,6 +164,9 @@ public:
 				output[i][j] = out[j];
 			}
 
+			//delete out;
+			//delete in;
+
 			readStrCsv<T>(res, target_out[i], outputLen);
 
 			switch (type)
@@ -190,6 +193,14 @@ public:
 					right++;
 			}
 
+			for (int i = 0; i < fileSize; i++)
+			{
+				delete output[i];
+				delete target_out[i];
+			}
+			delete[] output;
+			delete[] target_out;
+
 			int all = fileSize;
 			return T(right) / T(all);
 		}
@@ -206,13 +217,10 @@ public:
 		return NULL;
 	}
 
-	T** dataProcess(std::string fileName, int size)
+	void dataProcess(std::string fileName, T** net_out, int size)
 	{
 		std::fstream set(fileName);
 		int outputLen = arrLayers[layersNum - 1]->getNeuronsNum();
-		T** net_out = new T*[outputLen];
-		for (int i = 0; i < outputLen; i++)
-			net_out[i] = new T;
 
 		for (int i = 0; i < size; i++)
 		{
@@ -220,8 +228,9 @@ public:
 			T* input = new T[length];
 			readStrCsv(set, input, length);
 			net_out[i] = process(input);
+			delete input;
 		}
-		return net_out;
+		set.close();
 	}
 
 	void fit(
@@ -262,92 +271,11 @@ public:
 				if (testValidation)
 					testEff = validate(testDataFName, testResFName, testDataFSize, metric, ftype);
 
-				delete target_out;
+				delete[] target_out;
+				delete[] input;
 			}
-		}
-	}
-
-	void addLayer(int neurons, T maxWeight, T minWeight = 0, int seed = 0)
-	{
-		T* biases = new T[neurons];
-		for (int i = 0; i < neurons; i++) { biases[i] = 0; }
-
-		int prevNum = arrLayers[this->getLayersNum() - 2]->getNeuronsNum();
-		int nextNum = arrLayers[this->getLayersNum() - 1]->getNeuronsNum();
-
-		Layer<T>* layer = new Layer<T>(biases, prevNum, neurons, nextNum);
-		arrLayers.add(*layer, layersNum - 1);
-		layersNum++;
-
-		arrMatrixes.del(matrixesNum - 1);
-		matrixesNum--;
-
-		Matrix<T>* matrix1 = new Matrix<T>(neurons, prevNum, seed, maxWeight, minWeight);
-		Matrix<T>* matrix2 = new Matrix<T>(nextNum, neurons, seed, maxWeight, minWeight);
-		arrMatrixes.add(*matrix1);
-		arrMatrixes.add(*matrix2);
-		matrixesNum += 2;
-	}
-
-	void addNeuron(int layer, T maxWeight, T minWeight = 0, int seed = 0)
-	{
-		if (layer > 0 and layer < layersNum)
-		{
-			int prevNum = arrLayers[layer]->getPrevNum();
-			int nextNum = arrLayers[layer]->getNextNum();
-			int neurons = arrLayers[layer]->getNeuronsNum();
-
-			arrLayers[layer]->add();
-
-			arrMatrixes.del(layer);
-			arrMatrixes.del(layer - 1);
-
-			Matrix<T>* matrix1 = new Matrix<T>(neurons + 1, prevNum, seed, maxWeight, minWeight);
-			Matrix<T>* matrix2 = new Matrix<T>(nextNum, neurons + 1, seed, maxWeight, minWeight);
-
-			arrMatrixes.add(*matrix1);
-			arrMatrixes.add(*matrix2);
-		}
-	}
-
-	void delLayer(int index, T maxWeight, T minWeight = 0, int seed = 0)
-	{
-		if (index > 0 and index < layersNum)
-		{
-			int prevNum = arrLayers[layersNum - 2]->getNeuronsNum();
-			int nextNum = arrLayers[this->getLayersNum() - 1]->getNeuronsNum();
-
-			arrLayers.del(index);
-			layersNum--;
-
-			arrMatrixes.del(matrixesNum - 1);
-			arrMatrixes.del(matrixesNum - 2);
-			matrixesNum -= 2;
-
-			Matrix<T>* matrix = new Matrix<T>(nextNum, prevNum, seed, maxWeight, minWeight);
-			arrMatrixes.add(*matrix);
-			matrixesNum++;
-		}
-	}
-
-	void delNeuron(int layer, T maxWeight, T minWeight = 0, int seed = 0)
-	{
-		if (layer > 0 and layer < layersNum)
-		{
-			int prevNum = arrLayers[layer]->getPrevNum();
-			int nextNum = arrLayers[layer]->getNextNum();
-			int neurons = arrLayers[layer]->getNeuronsNum();
-
-			arrLayers[layer]->del(0);
-
-			arrMatrixes.del(layer);
-			arrMatrixes.del(layer - 1);
-
-			Matrix<T>* matrix1 = new Matrix<T>(neurons - 1, prevNum, seed, maxWeight, minWeight);
-			Matrix<T>* matrix2 = new Matrix<T>(nextNum, neurons - 1, seed, maxWeight, minWeight);
-
-			arrMatrixes.add(*matrix1);
-			arrMatrixes.add(*matrix2);
+			data.close();
+			res.close();
 		}
 	}
 

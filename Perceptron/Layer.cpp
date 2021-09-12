@@ -11,6 +11,16 @@ class Layer
 	int prevNum;
 	int nextNum;
 public:
+	Layer()
+	{
+		input = new T;
+		output = new T;
+		error = new T;
+		neurons = 1;
+		prevNum = 1;
+		nextNum = 1;
+	}
+
 	Layer(T* biases, int _prevNum = 1, int _neuronsNum = 1, int _nextNum = 1)
 	{
 		neurons = _neuronsNum;
@@ -46,7 +56,10 @@ public:
 		input = _input;
 		for (int i = 0; i < neurons; i++)
 		{
-			output[i] = arr[i]->process(_input, matrix->getColWeights(i), ftype);
+			T* weights = new T[matrix->getHeight()];
+			matrix->getColWeights(weights, i);
+			output[i] = arr[i]->process(_input, weights, ftype);
+			delete[] weights;
 		}
 		return output;
 	}
@@ -55,35 +68,32 @@ public:
 	{
 		for (int i = 0; i < neurons; i++)
 		{
+			T* weights = new T[matrix->getHeight()];
+			matrix->getColWeights(weights, i);
 			error[i] = (target[i] - output[i]) *
-				derivative<T>(ftype, weighedSum<T>(input, matrix->getColWeights(i), prevNum) + arr[i]->getBias());
+				derivative<T>(ftype, weighedSum<T>(input, weights, prevNum) + arr[i]->getBias());
+			delete[] weights;
 		}
-
 	}
 
 	void setError(T* errors, Matrix<T>* thisMatrix, Matrix<T>* prevMatrix, functionType ftype)
 	{
 		for (int i = 0; i < neurons; i++)
 		{
-			error[i] = (weighedSum(errors, thisMatrix->getStrWeights(i), arr[i]->getNextNum())) *
-				(derivative<T>(ftype, weighedSum<T>(input, prevMatrix->getColWeights(i), prevNum) + arr[i]->getBias()));
+			T* strWeights = new T[thisMatrix->getLength()];
+			thisMatrix->getStrWeights(strWeights, i);
+
+			T* colWeights = new T[prevMatrix->getHeight()];
+			prevMatrix->getColWeights(colWeights, i);
+
+			error[i] = (weighedSum(errors, strWeights, arr[i]->getNextNum())) *
+				(derivative<T>(ftype, weighedSum<T>(input, colWeights, prevNum) + arr[i]->getBias()));
+			delete[] strWeights;
+			delete[] colWeights;
 		}
 	}
 
 	void setNeurons(int _neurons) { neurons = _neurons; }
-
-	void add()
-	{
-		Neuron<T>* neuron = new Neuron<T>(prevNum, nextNum, 0);
-		arr.add(*neuron);
-		neurons++;
-	}
-
-	void del(int index)
-	{
-		arr.del(index);
-		neurons--;
-	}
 
 	T* getInput() { return input; }
 
