@@ -69,7 +69,7 @@ public:
 		{
 			delete arr[i];
 		}
-		delete arr;
+		delete[] arr;
 	}
 
 	void fileOutput(std::ofstream& file)

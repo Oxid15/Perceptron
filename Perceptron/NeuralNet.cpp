@@ -164,6 +164,9 @@ public:
 				output[i][j] = out[j];
 			}
 
+			//delete out;
+			//delete in;
+
 			readStrCsv<T>(res, target_out[i], outputLen);
 
 			switch (type)
@@ -190,6 +193,14 @@ public:
 					right++;
 			}
 
+			for (int i = 0; i < fileSize; i++)
+			{
+				delete output[i];
+				delete target_out[i];
+			}
+			delete[] output;
+			delete[] target_out;
+
 			int all = fileSize;
 			return T(right) / T(all);
 		}
@@ -206,13 +217,10 @@ public:
 		return NULL;
 	}
 
-	T** dataProcess(std::string fileName, int size)
+	void dataProcess(std::string fileName, T** net_out, int size)
 	{
 		std::fstream set(fileName);
 		int outputLen = arrLayers[layersNum - 1]->getNeuronsNum();
-		T** net_out = new T*[outputLen];
-		for (int i = 0; i < outputLen; i++)
-			net_out[i] = new T;
 
 		for (int i = 0; i < size; i++)
 		{
@@ -220,8 +228,9 @@ public:
 			T* input = new T[length];
 			readStrCsv(set, input, length);
 			net_out[i] = process(input);
+			delete input;
 		}
-		return net_out;
+		set.close();
 	}
 
 	void fit(
