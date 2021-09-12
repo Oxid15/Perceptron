@@ -56,7 +56,10 @@ public:
 		input = _input;
 		for (int i = 0; i < neurons; i++)
 		{
-			output[i] = arr[i]->process(_input, matrix->getColWeights(i), ftype);
+			T* weights = new T[matrix->getHeight()];
+			matrix->getColWeights(weights, i);
+			output[i] = arr[i]->process(_input, weights, ftype);
+			delete[] weights;
 		}
 		return output;
 	}
@@ -65,8 +68,11 @@ public:
 	{
 		for (int i = 0; i < neurons; i++)
 		{
+			T* weights = new T[matrix->getHeight()];
+			matrix->getColWeights(weights, i);
 			error[i] = (target[i] - output[i]) *
-				derivative<T>(ftype, weighedSum<T>(input, matrix->getColWeights(i), prevNum) + arr[i]->getBias());
+				derivative<T>(ftype, weighedSum<T>(input, weights, prevNum) + arr[i]->getBias());
+			delete[] weights;
 		}
 	}
 
@@ -74,8 +80,16 @@ public:
 	{
 		for (int i = 0; i < neurons; i++)
 		{
-			error[i] = (weighedSum(errors, thisMatrix->getStrWeights(i), arr[i]->getNextNum())) *
-				(derivative<T>(ftype, weighedSum<T>(input, prevMatrix->getColWeights(i), prevNum) + arr[i]->getBias()));
+			T* strWeights = new T[thisMatrix->getLength()];
+			thisMatrix->getStrWeights(strWeights, i);
+
+			T* colWeights = new T[prevMatrix->getHeight()];
+			prevMatrix->getColWeights(colWeights, i);
+
+			error[i] = (weighedSum(errors, strWeights, arr[i]->getNextNum())) *
+				(derivative<T>(ftype, weighedSum<T>(input, colWeights, prevNum) + arr[i]->getBias()));
+			delete[] strWeights;
+			delete[] colWeights;
 		}
 	}
 

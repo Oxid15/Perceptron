@@ -83,55 +83,26 @@ public:
 		}
 	}
 
-	T* getStrWeights(int index)
+	void getStrWeights(T* weights, int index)
 	{
-		try
+		if (index < height)
 		{
-			if (index < height)
+			for (int i = 0; i < length; i++)
 			{
-				//this is convenient, but may cause memory overflow
-				T* temp = new T[length];
-				for (int i = 0; i < length; i++)
-				{
-					temp[i] = arr[i][index];
-				}
-				return temp;
+				weights[i] = arr[i][index];
 			}
-			else
-				throw "Access violation!";
 		}
-
-		catch (char* str)
-		{
-			std::cerr << str << "\n";
-		}
-
-		return nullptr;
 	}
 
-	T* getColWeights(int index)
+	void getColWeights(T* weights, int index)
 	{
-		try
+		if (index < length)
 		{
-			if (index < length)
+			for (int i = 0; i < height; i++)
 			{
-				//same
-				T* temp = new T[height];
-				for (int i = 0; i < height; i++)
-				{
-					temp[i] = arr[index][i];
-				}
-				return temp;
+				weights[i] = arr[index][i];
 			}
-			else
-				throw "Access violation!";
 		}
-		catch (char* str)
-		{
-			std::cerr << str << "\n";
-		}
-
-		return nullptr;
 	}
 
 	void setWeight(int i, int j, T weight)
@@ -175,7 +146,7 @@ public:
 
 		for (int i = 0; i < length; i++)
 			delete dWeights[i];
-		delete dWeights;
+		delete[] dWeights;
 	}
 
 	T getWeight(int i, int j)
