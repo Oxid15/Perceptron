@@ -45,14 +45,14 @@ class NeuralNet
 
 public:
 
-	T* process(T* input)
+	void process(T* input, T* output)
 	{
 		arrLayers[0]->process(input);
 		for (int i = 1; i < layersNum; i++)
 		{
 			arrLayers[i]->process(arrLayers[i - 1]->getOutput(), arrMatrixes[i - 1], ftype);
 		}
-		return arrLayers[layersNum - 1]->getOutput();
+		memcpy(output, arrLayers[layersNum - 1]->getOutput(), sizeof(T) * arrLayers[layersNum - 1]->getNeuronsNum());
 	}
 
 	NeuralNet(std::string fileName)
@@ -157,15 +157,15 @@ public:
 			T* out = new T[outputLen];
 			T* in = new T[length];
 			readStrCsv(data, in, length);
-			out = process(in);
+			process(in, out);
 
 			for (int j = 0 ;j < outputLen; j++)
 			{
 				output[i][j] = out[j];
 			}
 
-			//delete out;
-			//delete in;
+			delete out;
+			delete in;
 
 			readStrCsv<T>(res, target_out[i], outputLen);
 
@@ -227,7 +227,7 @@ public:
 			int length = arrLayers[0]->getNeuronsNum();
 			T* input = new T[length];
 			readStrCsv(set, input, length);
-			net_out[i] = process(input);
+			process(input, net_out[i]);
 			delete input;
 		}
 		set.close();
@@ -259,7 +259,7 @@ public:
 				int length = arrLayers[0]->getNeuronsNum();
 				T* input = new T[length];
 				readStrCsv<T>(data, input, length);
-				net_out = process(input);
+				process(input, net_out);
 
 				T* target_out = new T[outputLen];
 				readStrCsv<T>(res, target_out, outputLen);
