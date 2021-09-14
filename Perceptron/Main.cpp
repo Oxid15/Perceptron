@@ -15,7 +15,7 @@ int main()
 
 	for (int i = 0; i < 4; i++)
 	{
-		output = net.process(inputs[i]);
+		net.process(inputs[i], output);
 		std::cout << "Output when [" << inputs[i][0] << "," << inputs[i][1] << "]: " << *output << std::endl;
 	}
 
