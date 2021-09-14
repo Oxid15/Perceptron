@@ -31,7 +31,7 @@ int main()
 	double* output = new double;
 
     // Inference the model
-    output = net.process(inputs);
+    net.process(inputs, output);
 
     std::cout << "Output with [" << inputs[0] << "," << inputs[1] << "]: " << *output << std::endl;
 }
@@ -68,7 +68,7 @@ int main()
 	for (int i = 0; i < 4; i++)
 	{
         // Inference the model
-		output = net.process(inputs[i]);
+		net.process(inputs[i], output);
 		std::cout << "Output when [" << inputs[i][0] << "," << inputs[i][1] << "]: " << *output << std::endl;
 	}
 }
