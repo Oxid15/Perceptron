@@ -38,7 +38,7 @@ int main()
 ```
 
 ### You don't have tensorflow model
-You can use this repository independently. Create and train models with simepl gradient descent algorithm that is implemented.
+You can use this repository independently. Create and train models with simple gradient descent algorithm that is implemented.
 
 ```cpp
 #include<iostream>
